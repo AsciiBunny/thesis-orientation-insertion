@@ -1,0 +1,256 @@
+package blankishproject.edgelist;
+
+import blankishproject.Util;
+import blankishproject.moves.MoveType;
+import blankishproject.moves.NegativeNormalMove;
+import blankishproject.moves.NormalMove;
+import blankishproject.moves.PositiveNormalMove;
+import nl.tue.geometrycore.geometry.Vector;
+import nl.tue.geometrycore.geometry.linear.Line;
+import nl.tue.geometrycore.geometry.linear.LineSegment;
+import nl.tue.geometrycore.geometry.linear.Polygon;
+import nl.tue.geometrycore.util.DoubleUtil;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class Configuration {
+
+    private final Polygon polygon;
+    public int index;
+    public final LineSegment previous;
+    public final LineSegment inner;
+    public final LineSegment next;
+
+    public final PositiveNormalMove positiveNormalMove;
+    public final NegativeNormalMove negativeNormalMove;
+
+    public Configuration(Polygon polygon, int index, LineSegment previous, LineSegment inner, LineSegment next) {
+        this.polygon = polygon;
+        this.index = index;
+        this.previous = previous;
+        this.inner = inner;
+        this.next = next;
+
+        this.positiveNormalMove = new PositiveNormalMove(this, polygon);
+        this.negativeNormalMove = new NegativeNormalMove(this, polygon);
+    }
+
+    public NormalMove getMove(MoveType moveType) {
+        return switch (moveType) {
+            case POSITIVE -> positiveNormalMove;
+            case NEGATIVE -> negativeNormalMove;
+            default -> throw new IllegalStateException("Unexpected value: " + moveType);
+        };
+    }
+
+    /**
+     * Apply a move, optionally apply cleanup code to make sure duplicate vertexes get removed
+     * <br> Complexity O(1) | O(n) when other configurations get updated, this is not yet implemented
+     */
+    public List<Integer> performMove(MoveType moveType, double area, boolean cleanup) {
+        var move = getMove(moveType);
+
+        move.applyMoveForArea(area);
+
+        if (cleanup) {
+            // TODO: Keep configurationList in sync with polygon during cleanup
+            return contractionCleanup();
+        } else {
+            return Collections.emptyList();
+        }
+
+    }
+
+    /**
+     * Completely applies contraction for move. Does cleanup
+     * <br> Complexity O(1) | O(n) when other configurations get updated, this is not yet implemented
+     */
+    public List<Integer> performContraction(MoveType moveType) {
+        var move = getMove(moveType);
+        move.applyContraction();
+        // Polygon cleanup TODO: Keep configurationList in sync with polygon during cleanup
+        return contractionCleanup();
+    }
+
+    private List<Integer> contractionCleanup() {
+        System.out.println(polygon);
+        // TODO: This somehow either incorrectly detects a mistake or in special pairs cleanup sometimes does not work.
+        assert index == polygon.vertices().indexOf(inner.getStart()) : "Index (" + index + ") is inaccurate (should be " + polygon.vertices().indexOf(inner.getStart()) + "), likely not updated correctly after performing previous contraction";
+
+        // Cleanup
+        var removed = new ArrayList<Integer>();
+        // Previous got shortened into non-existence
+        if (previous.getStart().isApproximately(previous.getEnd())) {
+            var removeIndex = (index - 1 + polygon.vertexCount()) % polygon.vertexCount();
+            assert polygon.vertex(removeIndex) == previous.getStart();
+            polygon.removeVertex(removeIndex);
+            removed.add(removeIndex);
+
+            if (removeIndex < index) {
+                index -= 1;
+            }
+        }
+
+        // Next got shortened into non-existence
+        if (next.getStart().isApproximately(next.getEnd())) {
+            var removeIndex = (index + 2) % polygon.vertexCount();
+            assert polygon.vertex(removeIndex) == next.getEnd();
+            polygon.removeVertex(removeIndex);
+            removed.add(removeIndex);
+
+            if (removeIndex < index) {
+                index -= 1;
+            }
+
+        }
+
+        assert index == polygon.vertices().indexOf(inner.getStart()) : "Index (" + index + ") was updated incorrectly (should be " + polygon.vertices().indexOf(inner.getStart()) + ") after removing vertices";
+
+        // Previous got shortened into non-existence and inner is now an extension of previous' previous
+        var previousAngle = inner.getDirection().computeClockwiseAngleTo(polygon.edge((index - 1) % polygon.vertexCount()).getDirection());
+        if (DoubleUtil.close(previousAngle, 0) || DoubleUtil.close(previousAngle, Math.PI) || DoubleUtil.close(previousAngle, 2 * Math.PI)) {
+            var removeIndex = index;
+            assert polygon.vertex(removeIndex) == inner.getStart();
+            polygon.removeVertex(removeIndex);
+            removed.add(removeIndex);
+
+            index -= 1;
+        }
+
+        // Next got shortened into non-existence and inner is now an extension of next's next
+        var nextAngle = inner.getDirection().computeClockwiseAngleTo(polygon.edge((index + 1) % polygon.vertexCount()).getDirection());
+        if (DoubleUtil.close(nextAngle, 0) || DoubleUtil.close(nextAngle, Math.PI) || DoubleUtil.close(nextAngle, 2 * Math.PI)) {
+            var removeIndex = (index + 1) % polygon.vertexCount();
+            assert polygon.vertex(removeIndex) == inner.getEnd();
+            polygon.removeVertex(removeIndex);
+            removed.add(removeIndex);
+        }
+
+        // Inner got shortened into non-existence
+        if (inner.getStart().isApproximately(inner.getEnd())) {
+            var removeIndex = index;
+            assert (polygon.vertex(removeIndex).isApproximately(inner.getStart()));
+            polygon.removeVertex(removeIndex);
+            removed.add(removeIndex);
+        }
+
+        return removed;
+    }
+
+    //region Tracks
+    public Line getPreviousTrack() {
+        return Util.extendLine(previous);
+    }
+
+    public Line getInnerTrack() {
+        return Util.extendLine(inner);
+    }
+
+    public Line getNextTrack() {
+        return Util.extendLine(next);
+    }
+    //endregion
+
+    //region Inner Normals
+
+    /**
+     * Returns the outwards normal of the inner edge
+     * <br> Complexity O(1)
+     */
+    public Vector getNormal() {
+        var normal = inner.getDirection();
+        normal.rotate90DegreesClockwise();
+        normal.normalize();
+        return normal;
+    }
+
+    /**
+     * Returns the inwards normal of the inner edge
+     * <br> Complexity O(1)
+     */
+    public Vector getOutwardsNormal() {
+        return getNormal();
+    }
+
+    /**
+     * Returns the inwards normal of the inner edge
+     * <br> Complexity O(1)
+     */
+    public Vector getInwardsNormal() {
+        var normal = getNormal();
+        normal.scale(-1);
+        return normal;
+    }
+    //endregion Inner Normals
+
+    //region Convexity/Reflexity
+
+    /**
+     * Returns the angle of the previous edge and the inner edge
+     * <br> Complexity O(1)
+     */
+    public double getStartAngle() {
+        return previous.getDirection().computeClockwiseAngleTo(inner.getDirection());
+    }
+
+    /**
+     * Returns the angle of the inner edge and the next edge
+     * <br> Complexity O(1)
+     */
+    public double getEndAngle() {
+        return inner.getDirection().computeClockwiseAngleTo(next.getDirection());
+    }
+
+    /**
+     * Returns whether the start vector of the inner edge is reflex
+     * <br> Complexity O(1)
+     */
+    public boolean isStartReflex() {
+        var angle = getStartAngle();
+        return angle < Math.PI;
+    }
+
+    /**
+     * Returns whether the end vector of the inner edge is reflex
+     * <br> Complexity O(1)
+     */
+    public boolean isEndReflex() {
+        var angle = getEndAngle();
+        return angle < Math.PI;
+    }
+
+    /**
+     * Returns whether the start vector of the inner edge is convex
+     * <br> Complexity O(1)
+     */
+    public boolean isStartConvex() {
+        return !isStartReflex();
+    }
+
+    /**
+     * Returns whether the end vector of the inner edge is convex
+     * <br> Complexity O(1)
+     */
+    public boolean isEndConvex() {
+        return !isEndReflex();
+    }
+
+    /**
+     * Returns whether the inner edge is convex
+     * <br> Complexity O(1)
+     */
+    public boolean isInnerConvex() {
+        return isStartConvex() && isEndConvex();
+    }
+
+    /**
+     * Returns whether the inner edge is reflex
+     * <br> Complexity O(1)
+     */
+    public boolean isInnerReflex() {
+        return isStartReflex() && isEndReflex();
+    }
+    //endregion Convexity/Reflexity
+}
