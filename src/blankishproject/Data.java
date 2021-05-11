@@ -14,6 +14,7 @@
 package blankishproject;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
@@ -107,5 +108,23 @@ public class Data {
         Algorithm.reset();
         Algorithm.resetDebug(this);
         draw.repaint();
+    }
+
+    public void runAlgorithm() {
+        Algorithm.run(this);
+        draw.repaint();
+        side.repaint();
+    }
+
+    public void finishAlgorithm() {
+        Algorithm.finish(this);
+        draw.repaint();
+        side.repaint();
+    }
+
+    public void runTestCode() {
+        TestCode.run(this);
+        draw.repaint();
+        side.repaint();
     }
 }

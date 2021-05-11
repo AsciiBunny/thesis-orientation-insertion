@@ -77,12 +77,16 @@ public class DrawPanel extends GeometryPanel {
     }
 
     @Override
-    protected void keyPress(int keycode, boolean ctrl, boolean shift, boolean alt) {
+
+    public void keyPress(int keycode, boolean ctrl, boolean shift, boolean alt) {
         switch (keycode) {
             case KeyEvent.VK_V -> data.pasteIPE();
             case KeyEvent.VK_C -> data.copyIPE();
-            case KeyEvent.VK_R -> data.resetGeometry();
+            case KeyEvent.VK_X -> data.resetGeometry();
+
+            case KeyEvent.VK_R -> data.runAlgorithm();
+            case KeyEvent.VK_F -> data.finishAlgorithm();
+            case KeyEvent.VK_T ->data. runTestCode();
         }
     }
-
 }

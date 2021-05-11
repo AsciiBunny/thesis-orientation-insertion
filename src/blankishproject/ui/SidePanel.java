@@ -90,7 +90,7 @@ public class SidePanel extends TabbedSidePanel {
 
         tab.addButton("Paste IPE [v]", (e) -> data.pasteIPE());
         tab.addButton("Copy IPE [c]", (e) -> data.copyIPE());
-        tab.addButton("Reset Geometry [r]", (e) -> data.resetGeometry());
+        tab.addButton("Reset Geometry [x]", (e) -> data.resetGeometry());
 
         tab.addComboBox(SizeMode.values(), data.sizemode, (e, v) -> {
             data.sizemode = v;
@@ -121,25 +121,12 @@ public class SidePanel extends TabbedSidePanel {
         tab.addLabel("Algorithm Running").setFont(titleFont);
         tab.addSeparator(0);
 
-        tab.addButton("Run Algorithm", (e -> {
-            Algorithm.run(data);
-            data.draw.repaint();
-            this.repaint();
-        }));
-
-        tab.addButton("Finish Algorithm", (e -> {
-            Algorithm.finish(data);
-            data.draw.repaint();
-            this.repaint();
-        }));
+        tab.addButton("Run Algorithm [r]", (e -> data.runAlgorithm()));
+        tab.addButton("Finish Algorithm [f]", (e -> data.finishAlgorithm()));
 
         tab.addSpace(3);
 
-        tab.addButton("Run Test Code", (e -> {
-            TestCode.run(data);
-            data.draw.repaint();
-            this.repaint();
-        }));
+        tab.addButton("Run Test Code [t]", (e -> data.runTestCode()));
 
         tab.addButton("Reset State", (e -> {
             // TODO: this
