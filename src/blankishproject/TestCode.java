@@ -1,6 +1,6 @@
 package blankishproject;
 
-import nl.tue.geometrycore.geometry.BaseGeometry;
+import blankishproject.ui.DrawPanel;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;

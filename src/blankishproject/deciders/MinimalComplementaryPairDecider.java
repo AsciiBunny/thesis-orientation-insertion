@@ -17,7 +17,7 @@ import static blankishproject.Util.undirectedEquals;
 public class MinimalComplementaryPairDecider implements IDecider {
 
     @Override
-    public List<Decision> findContraction(Polygon polygon, ConfigurationList configurations) {
+    public List<Decision> findMoves(Polygon polygon, ConfigurationList configurations) {
         var bestSpecialPair = findSpecialPair(polygon, configurations);
         var bestNormalPair = findNormalPair(polygon, configurations);
 

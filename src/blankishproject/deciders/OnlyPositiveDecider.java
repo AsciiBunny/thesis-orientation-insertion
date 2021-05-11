@@ -11,7 +11,7 @@ import java.util.List;
 public class OnlyPositiveDecider implements IDecider {
 
     @Override
-    public List<Decision> findContraction(Polygon polygon, ConfigurationList configurations) {
+    public List<Decision> findMoves(Polygon polygon, ConfigurationList configurations) {
         Configuration min = null;
         double minArea = Double.MAX_VALUE;
         for (var configuration : configurations) {

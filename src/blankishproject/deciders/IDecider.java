@@ -16,7 +16,7 @@ public interface IDecider {
         Map.entry("4. Minimal Complementary Pair", new MinimalComplementaryPairDecider())
     );
 
-    List<Decision> findContraction(Polygon polygon, ConfigurationList configurations);
+    List<Decision> findMoves(Polygon polygon, ConfigurationList configurations);
 
 }
 

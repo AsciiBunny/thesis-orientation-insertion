@@ -56,11 +56,10 @@ public class Configuration {
 
         if (cleanup) {
             // TODO: Keep configurationList in sync with polygon during cleanup
-            return contractionCleanup();
+            return moveCleanup();
         } else {
             return Collections.emptyList();
         }
-
     }
 
     /**
@@ -71,12 +70,10 @@ public class Configuration {
         var move = getMove(moveType);
         move.applyContraction();
         // Polygon cleanup TODO: Keep configurationList in sync with polygon during cleanup
-        return contractionCleanup();
+        return moveCleanup();
     }
 
-    private List<Integer> contractionCleanup() {
-        System.out.println(polygon);
-        // TODO: This somehow either incorrectly detects a mistake or in special pairs cleanup sometimes does not work.
+    private List<Integer> moveCleanup() {
         assert index == polygon.vertices().indexOf(inner.getStart()) : "Index (" + index + ") is inaccurate (should be " + polygon.vertices().indexOf(inner.getStart()) + "), likely not updated correctly after performing previous contraction";
 
         // Cleanup

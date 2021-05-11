@@ -11,8 +11,11 @@
  * DrawPanel.java: the rendering canvas
  * SidePanel.java: the sidepanel
  */
-package blankishproject;
+package blankishproject.ui;
 
+import blankishproject.Algorithm;
+import blankishproject.Data;
+import blankishproject.TestCode;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Rectangle;
 import nl.tue.geometrycore.geometryrendering.GeometryPanel;
@@ -76,15 +79,9 @@ public class DrawPanel extends GeometryPanel {
     @Override
     protected void keyPress(int keycode, boolean ctrl, boolean shift, boolean alt) {
         switch (keycode) {
-            case KeyEvent.VK_V:
-                data.pasteIPE();
-                break;
-            case KeyEvent.VK_C:
-                data.copyIPE();
-                break;
-            case KeyEvent.VK_R:
-                data.resetGeometry();
-                break;
+            case KeyEvent.VK_V -> data.pasteIPE();
+            case KeyEvent.VK_C -> data.copyIPE();
+            case KeyEvent.VK_R -> data.resetGeometry();
         }
     }
 

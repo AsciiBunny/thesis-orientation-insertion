@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import blankishproject.ui.DrawPanel;
+import blankishproject.ui.SidePanel;
 import nl.tue.geometrycore.geometry.BaseGeometry;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
@@ -37,11 +39,11 @@ public class Data {
     public List<BaseGeometry> geometries = new ArrayList<>();
     
     // settings
-    SizeMode sizemode = SizeMode.VIEW;
-    double strokewidth = 3;
-    BaseGeometry selected = null;
+    public SizeMode sizemode = SizeMode.VIEW;
+    public double strokewidth = 3;
+    public BaseGeometry selected = null;
 
-    public String deciderType = "2. Smallest Single";
+    public String deciderType = "4. Minimal Complementary Pair";
 
     // Debug geometry
     public Map<Color, GeometryList<LineSegment>> debugLines = new HashMap<>();
@@ -65,7 +67,7 @@ public class Data {
         this.side = new SidePanel(this);
     }
 
-    void select(Vector loc, double distance) {
+    public void select(Vector loc, double distance) {
         selected =null;
         for (BaseGeometry g : geometries) {
             if (g.distanceTo(loc) < distance) {
@@ -75,7 +77,7 @@ public class Data {
         draw.repaint();
     }
 
-    void pasteIPE() {
+    public void pasteIPE() {
         try (IPEReader read = IPEReader.clipboardReader()) {
             List<ReadItem> items = read.read();
             for (ReadItem i : items) {
@@ -88,7 +90,7 @@ public class Data {
         }
     }
 
-    void copyIPE() {
+    public void copyIPE() {
         copyMode = true;
         try (IPEWriter write = IPEWriter.clipboardWriter()) {
             write.initialize();            
@@ -100,8 +102,9 @@ public class Data {
         copyMode = false;
     }
 
-    void resetGeometry() {
+    public void resetGeometry() {
         geometries.clear();
+        Algorithm.reset();
         Algorithm.resetDebug(this);
         draw.repaint();
     }

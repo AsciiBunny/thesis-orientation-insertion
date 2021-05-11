@@ -2,6 +2,7 @@ package blankishproject;
 
 import blankishproject.deciders.IDecider;
 import blankishproject.edgelist.ConfigurationList;
+import blankishproject.ui.DrawPanel;
 import nl.tue.geometrycore.geometry.curved.CircularArc;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
@@ -10,11 +11,28 @@ import nl.tue.geometrycore.geometryrendering.styling.Dashing;
 import nl.tue.geometrycore.geometryrendering.styling.TextAnchor;
 
 import java.awt.*;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class Algorithm {
+
+    public static int totalVerticesRemoved = 0;
+    public static int lastCycleVerticesRemoved = 0;
+
+    public static double totalAreaEffected = 0;
+    public static double lastCycleAreaEffected = 0;
+
+    public static int totalMovesMade = 0;
+    public static int lastCycleMovesMade = 0;
+
+    public static long totalTimeTaken = 0;
+    public static long lastCycleTimeTaken = 0;
+
+    public static void reset() {
+        totalVerticesRemoved = lastCycleVerticesRemoved = 0;
+        totalAreaEffected = lastCycleAreaEffected = 0;
+        totalMovesMade = lastCycleMovesMade = 0;
+        totalTimeTaken = lastCycleTimeTaken = 0;
+    }
 
     public static void run(Data data) {
         loop(data, (Polygon) data.geometries.get(0));
@@ -39,6 +57,16 @@ public class Algorithm {
         }
     }
 
+    public static boolean timedLoop(Data data, Polygon polygon) {
+        long start = System.currentTimeMillis();
+        var madeChanged = loop(data, polygon);
+        long end = System.currentTimeMillis();
+        long duration = end - start;
+        totalTimeTaken += duration;
+        lastCycleTimeTaken = duration;
+        return madeChanged;
+    }
+
     public static boolean loop(Data data, Polygon polygon) {
         var configurationList = new ConfigurationList(polygon);
 
@@ -50,19 +78,30 @@ public class Algorithm {
         //      Find smallest contraction possible O(n)
         //      Pair with the smallest non-conflicting contraction
         //
-        var contractions = new ArrayList<>(IDecider.deciders.get(data.deciderType).findContraction(polygon, configurationList));
-        var madeChanges = contractions.size() > 0;
+        var moves = new ArrayList<>(IDecider.deciders.get(data.deciderType).findMoves(polygon, configurationList));
+        var madeChanges = moves.size() > 0;
 
-        while (contractions.size() > 0) {
-            var min = contractions.remove(0);
+        totalMovesMade += moves.size();
+        lastCycleMovesMade = moves.size();
+        lastCycleAreaEffected = 0;
+        lastCycleVerticesRemoved = 0;
+
+        while (moves.size() > 0) {
+            var min = moves.remove(0);
             var configuration = min.configuration;
+
+            totalAreaEffected += min.removeArea;
+            lastCycleAreaEffected += min.removeArea;
 
             debugArrows.add(configuration.inner.clone());
             var removed = configuration.performMove(min.type, min.removeArea, min.requiresCleanup);
-            contractions.forEach(c -> {
+
+            totalVerticesRemoved += removed.size();
+            lastCycleVerticesRemoved += removed.size();
+
+            moves.forEach(c -> {
                 removed.forEach(i -> {
                     if (i < c.configuration.index) {
-                        System.out.println(c.configuration.index + " -> " + c.configuration.index);
                         c.configuration.index--;
                     }
                 });

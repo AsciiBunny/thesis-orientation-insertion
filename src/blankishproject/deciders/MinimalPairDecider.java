@@ -12,7 +12,7 @@ import static blankishproject.Util.undirectedEquals;
 
 public class MinimalPairDecider implements IDecider {
     @Override
-    public List<Decision> findContraction(Polygon polygon, ConfigurationList configurations) {
+    public List<Decision> findMoves(Polygon polygon, ConfigurationList configurations) {
         Configuration minPositive = null;
         double minPositiveArea = Double.MAX_VALUE;
         for (var configuration : configurations) {
