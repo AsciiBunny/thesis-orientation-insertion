@@ -1,11 +1,11 @@
 /**
- * This project is to serve as a simple base upon which to create GeometryCore 
- * projects. It creates a simple GUI which can receive copies from IPE and 
- * renders them black with a give stroke thickness. This can then be rendered 
+ * This project is to serve as a simple base upon which to create GeometryCore
+ * projects. It creates a simple GUI which can receive copies from IPE and
+ * renders them black with a give stroke thickness. This can then be rendered
  * back to IPE as well.
- * 
+ * <p>
  * Note that this demo isn't meant to display coding best-practices.
- * 
+ * <p>
  * Main.java: how to easily create a default GUI with a drawpanel and a sidepanel
  * Data.java: central handler of data/settings/etc
  * DrawPanel.java: the rendering canvas
@@ -13,7 +13,8 @@
  */
 package blankishproject.ui;
 
-import blankishproject.Algorithm;
+import blankishproject.Schematization;
+import blankishproject.Simplification;
 import blankishproject.Data;
 import blankishproject.TestCode;
 import nl.tue.geometrycore.geometry.Vector;
@@ -24,6 +25,7 @@ import nl.tue.geometrycore.geometryrendering.styling.Dashing;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 
 /**
  *
@@ -40,8 +42,14 @@ public class DrawPanel extends GeometryPanel {
     @Override
     protected void drawScene() {
         setSizeMode(data.sizemode);
+        setStroke(Color.lightGray, data.strokewidth, Dashing.SOLID);
+
+        draw(data.original);
+
         setStroke(Color.black, data.strokewidth, Dashing.SOLID);
-        draw(data.geometries);
+        if (data.schematization != null && data.schematization.vertexCount() > 0)
+            draw(data.schematization);
+        //draw(data.simplification);
 
         if (data.copyMode)
             return;
@@ -49,24 +57,26 @@ public class DrawPanel extends GeometryPanel {
         setStroke(Color.red, 1.5 * data.strokewidth, Dashing.SOLID);
         draw(data.selected);
 
-        for(var color : data.debugLines.keySet()) {
+        for (var color : data.debugLines.keySet()) {
             setStroke(color, data.strokewidth, Dashing.SOLID);
             draw(data.debugLines.get(color));
         }
 
-        for(var color : data.debugArrows.keySet()) {
+        for (var color : data.debugArrows.keySet()) {
             setStroke(color, data.strokewidth, Dashing.dashed(data.strokewidth));
             //setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 100);
             draw(data.debugArrows.get(color));
         }
 
-        Algorithm.drawDebug(data, this);
+        Schematization.drawDebug(data, this);
+        Simplification.drawDebug(data, this);
         TestCode.draw(data, this);
     }
 
     @Override
     public Rectangle getBoundingRectangle() {
-        return Rectangle.byBoundingBox(data.geometries);
+        //return Rectangle.byBoundingBox(data.geometries);
+        return Rectangle.byBoundingBox(Arrays.asList(data.original, data.simplification, data.schematization));
     }
 
     @Override
@@ -77,16 +87,15 @@ public class DrawPanel extends GeometryPanel {
     }
 
     @Override
-
     public void keyPress(int keycode, boolean ctrl, boolean shift, boolean alt) {
         switch (keycode) {
             case KeyEvent.VK_V -> data.pasteIPE();
             case KeyEvent.VK_C -> data.copyIPE();
             case KeyEvent.VK_X -> data.resetGeometry();
 
-            case KeyEvent.VK_R -> data.runAlgorithm();
-            case KeyEvent.VK_F -> data.finishAlgorithm();
-            case KeyEvent.VK_T ->data. runTestCode();
+            case KeyEvent.VK_R -> data.runSimplificationAlgorithm();
+            case KeyEvent.VK_F -> data.finishSimplificationAlgorithm();
+            case KeyEvent.VK_T -> data.runTestCode();
         }
     }
 }

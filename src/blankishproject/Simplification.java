@@ -13,7 +13,7 @@ import nl.tue.geometrycore.geometryrendering.styling.TextAnchor;
 import java.awt.*;
 import java.util.ArrayList;
 
-public class Algorithm {
+public class Simplification {
 
     public static int totalVerticesRemoved = 0;
     public static int lastCycleVerticesRemoved = 0;
@@ -35,15 +35,15 @@ public class Algorithm {
     }
 
     public static void run(Data data) {
-        loop(data, (Polygon) data.geometries.get(0));
+        iteration(data, data.simplification);
     }
 
     public static void finish(Data data) {
-        var polygon = (Polygon) data.geometries.get(0);
+        var polygon = data.simplification;
 
         var before = polygon.vertexCount();
         while(true) {
-            var done = !loop(data, polygon);
+            var done = !iteration(data, polygon);
 
             var after = polygon.vertexCount();
             if (before != after)
@@ -57,9 +57,9 @@ public class Algorithm {
         }
     }
 
-    public static boolean timedLoop(Data data, Polygon polygon) {
+    public static boolean timedIteration(Data data, Polygon polygon) {
         long start = System.currentTimeMillis();
-        var madeChanged = loop(data, polygon);
+        var madeChanged = iteration(data, polygon);
         long end = System.currentTimeMillis();
         long duration = end - start;
         totalTimeTaken += duration;
@@ -67,7 +67,7 @@ public class Algorithm {
         return madeChanged;
     }
 
-    public static boolean loop(Data data, Polygon polygon) {
+    public static boolean iteration(Data data, Polygon polygon) {
         var configurationList = new ConfigurationList(polygon);
 
         var debugLines = new GeometryList<LineSegment>();
@@ -124,8 +124,8 @@ public class Algorithm {
     }
 
     public static void drawDebug(Data data, DrawPanel panel) {
-        if (data.geometries.size() == 0) return;
-        var polygon = (Polygon) data.geometries.get(0);
+        if (data.simplification == null) return;
+        var polygon = data.simplification;
         var configurationList = new ConfigurationList(polygon);
 
         if (data.drawConvexityArcs)

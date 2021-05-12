@@ -13,9 +13,8 @@
  */
 package blankishproject.ui;
 
-import blankishproject.Algorithm;
+import blankishproject.Simplification;
 import blankishproject.Data;
-import blankishproject.TestCode;
 import blankishproject.deciders.IDecider;
 import nl.tue.geometrycore.geometryrendering.styling.SizeMode;
 import nl.tue.geometrycore.gui.sidepanel.SideTab;
@@ -34,8 +33,6 @@ public class SidePanel extends TabbedSidePanel {
 
     private final Data data;
 
-
-    private ChangeLabel geometryCountLabel;
     private ChangeLabel vertexCountLabel;
     private ChangeLabel edgeCountLabel;
     private ChangeLabel areaLabel;
@@ -66,6 +63,8 @@ public class SidePanel extends TabbedSidePanel {
         addGeometryOptionsSection(tab);
         tab.addSpace(5);
         addGeometryInformationSection(tab);
+        tab.addSpace(5);
+        addSchematizationRunningSection(tab);
     }
 
     private void addSimplificationTab() {
@@ -75,11 +74,11 @@ public class SidePanel extends TabbedSidePanel {
         tab.addSpace(5);
         addGeometryInformationSection(tab);
         tab.addSpace(5);
-        addAlgorithmRunningSection(tab);
+        addSimplificationRunningSection(tab);
         tab.addSpace(5);
-        addAlgorithmOptionsSection(tab);
+        addSimplificationOptionsSection(tab);
         tab.addSpace(5);
-        addAlgorithmInformationSection(tab);
+        addSimplificationInformationSection(tab);
         tab.addSpace(5);
         addDebugDrawOptionsSection(tab);
     }
@@ -106,9 +105,6 @@ public class SidePanel extends TabbedSidePanel {
         tab.addLabel("Geometry Information").setFont(titleFont);
         tab.addSeparator(0);
 
-
-        geometryCountLabel = new ChangeLabel("Geometries", 0);
-        tab.addComponent(geometryCountLabel);
         vertexCountLabel = new ChangeLabel("Vertices", 0);
         tab.addComponent(vertexCountLabel);
         edgeCountLabel = new ChangeLabel("Edges", 0);
@@ -117,12 +113,20 @@ public class SidePanel extends TabbedSidePanel {
         tab.addComponent(areaLabel);
     }
 
-    private void addAlgorithmRunningSection(SideTab tab) {
+    private void addSchematizationRunningSection(SideTab tab) {
         tab.addLabel("Algorithm Running").setFont(titleFont);
         tab.addSeparator(0);
 
-        tab.addButton("Run Algorithm [r]", (e -> data.runAlgorithm()));
-        tab.addButton("Finish Algorithm [f]", (e -> data.finishAlgorithm()));
+        tab.addButton("Run Algorithm [r]", (e -> data.runSchematizationAlgorithm()));
+        tab.addButton("Finish Algorithm [f]", (e -> data.finishSchematizationAlgorithm()));
+    }
+
+    private void addSimplificationRunningSection(SideTab tab) {
+        tab.addLabel("Algorithm Running").setFont(titleFont);
+        tab.addSeparator(0);
+
+        tab.addButton("Run Algorithm [r]", (e -> data.runSimplificationAlgorithm()));
+        tab.addButton("Finish Algorithm [f]", (e -> data.finishSimplificationAlgorithm()));
 
         tab.addSpace(3);
 
@@ -130,7 +134,7 @@ public class SidePanel extends TabbedSidePanel {
 
         tab.addButton("Reset State", (e -> {
             // TODO: this
-            Algorithm.reset();
+            Simplification.reset();
             data.draw.repaint();
             this.repaint();
         }));
@@ -140,7 +144,7 @@ public class SidePanel extends TabbedSidePanel {
         }));
     }
 
-    private void addAlgorithmOptionsSection(SideTab tab) {
+    private void addSimplificationOptionsSection(SideTab tab) {
         tab.addLabel("Algorithm Options").setFont(titleFont);
         tab.addSeparator(0);
 
@@ -151,7 +155,7 @@ public class SidePanel extends TabbedSidePanel {
     }
 
 
-    private void addAlgorithmInformationSection(SideTab tab) {
+    private void addSimplificationInformationSection(SideTab tab) {
         tab.addLabel("Algorithm Information").setFont(titleFont);
         tab.addSeparator(0);
 
@@ -219,25 +223,24 @@ public class SidePanel extends TabbedSidePanel {
     }
 
     public void repaintGeometryInformation() {
-        var polygon = data.geometries.size() > 0 ? ((Polygon) data.geometries.get(0)) : null;
+        var polygon = data.simplification;
 
-        geometryCountLabel.setNewValue(data.geometries.size());
         vertexCountLabel.setNewValue(polygon != null ? polygon.vertexCount() : 0);
         edgeCountLabel.setNewValue(polygon != null ? polygon.edgeCount() : 0);
         areaLabel.setNewValue(polygon != null ? polygon.areaUnsigned() : 0);
     }
 
     public void repaintAlgorithmInformation() {
-        totalRemovedVertexCountLabel.setNewValue(Algorithm.totalVerticesRemoved);
-        lastCycleRemovedVertexCountLabel.setNewValue(Algorithm.lastCycleVerticesRemoved);
+        totalRemovedVertexCountLabel.setNewValue(Simplification.totalVerticesRemoved);
+        lastCycleRemovedVertexCountLabel.setNewValue(Simplification.lastCycleVerticesRemoved);
 
-        totalEffectedAreaLabel.setNewValue(Algorithm.totalAreaEffected);
-        lastCycleEffectedAreaLabel.setNewValue(Algorithm.lastCycleAreaEffected);
+        totalEffectedAreaLabel.setNewValue(Simplification.totalAreaEffected);
+        lastCycleEffectedAreaLabel.setNewValue(Simplification.lastCycleAreaEffected);
 
-        totalMovesMadeLabel.setNewValue(Algorithm.totalMovesMade);
-        lastCycleMovesMadeLabel.setNewValue(Algorithm.lastCycleMovesMade);
+        totalMovesMadeLabel.setNewValue(Simplification.totalMovesMade);
+        lastCycleMovesMadeLabel.setNewValue(Simplification.lastCycleMovesMade);
 
-        totalTimeTakenLabel.setNewValue(Algorithm.totalTimeTaken);
-        lastCycleTimeTakenLabel.setNewValue(Algorithm.lastCycleTimeTaken);
+        totalTimeTakenLabel.setNewValue(Simplification.totalTimeTaken);
+        lastCycleTimeTakenLabel.setNewValue(Simplification.lastCycleTimeTaken);
     }
 }

@@ -16,72 +16,72 @@ public class TestCode {
 
     }
 
-    public static void trapezoidTest(Data data) {
-        var polygon = ((Polygon) data.geometries.get(0));
-
-        //assert Util.extendLine(polygon.edge(0)).intersect(Util.extendLine(polygon.edge(2))).size() == 0;
-
-        var inner = polygon.edge(0);
-        var outer = polygon.edge(2);
-        var innerLength = inner.length();
-        var outerLength = outer.length();
-
-        var shorter = innerLength < outerLength ? inner : outer;
-        var longer = innerLength < outerLength ? outer : inner;
-        var shorterLength = shorter.length();
-        var longerLength = longer.length();
-
-
-        var totalArea = polygon.areaUnsigned();
-        var removeArea = totalArea / 4;
-
-        if (innerLength < outerLength)
-            removeArea = totalArea - removeArea;
-
-        var totalHeight = Util.extendLine(longer).closestPoint(shorter.getStart()).distanceTo(shorter.getStart());
-        var removeDirection = Vector.subtract(shorter.getStart(), Util.extendLine(longer).closestPoint(shorter.getStart()));
-        removeDirection.normalize();
-
-        var calcArea = 0.5 * totalHeight * (shorterLength + longerLength);
-        assert DoubleUtil.close(calcArea, totalArea) : calcArea + " != " + totalArea;
-
-        var midLength = Math.sqrt(2 * shorterLength * removeArea + longerLength * (longerLength * totalHeight - 2 * removeArea)) / Math.sqrt(totalHeight);
-        var removeDistance = (2 * removeArea) / (midLength + longerLength);
-
-        assert shorterLength < midLength || DoubleUtil.close(shorterLength, midLength);
-        assert midLength < longerLength || DoubleUtil.close(midLength, longerLength);
-        assert removeDistance > 0;
-        assert removeDistance < totalHeight;
-
-        System.out.println("midLength = " + midLength);
-        System.out.println("removeDistance = " + removeDistance);
-
-        var removeVector = Vector.multiply(removeDistance, removeDirection);
-        var mid = longer.clone();
-        mid.translate(removeVector);
-        var midLine = Util.extendLine(mid);
-
-        data.geometries.add(midLine);
-
-        mid.setStart((Vector) polygon.edge(1).intersect(midLine).get(0));
-        mid.setEnd((Vector) polygon.edge(3).intersect(midLine).get(0));
-
-        assert DoubleUtil.close(mid.length(), midLength);
-
-        var upper = new Polygon(inner.getStart().clone(), inner.getEnd().clone(), mid.getStart().clone(), mid.getEnd().clone());
-        var lower = new Polygon(mid.getStart().clone(), mid.getEnd().clone(), outer.getEnd().clone(), outer.getStart().clone());
-
-        upper.translate(longerLength * 1.5, 0);
-        lower.translate(longerLength * 1.5, -10);
-
-        var upperArea = upper.areaUnsigned();
-        var lowerArea = lower.areaUnsigned();
-
-        assert DoubleUtil.close(upperArea, removeArea) || DoubleUtil.close(lowerArea, removeArea);
-
-        data.geometries.add(upper);
-        data.geometries.add(lower);
-    }
+//    public static void trapezoidTest(Data data) {
+//        var polygon = ((Polygon) data.geometries.get(0));
+//
+//        //assert Util.extendLine(polygon.edge(0)).intersect(Util.extendLine(polygon.edge(2))).size() == 0;
+//
+//        var inner = polygon.edge(0);
+//        var outer = polygon.edge(2);
+//        var innerLength = inner.length();
+//        var outerLength = outer.length();
+//
+//        var shorter = innerLength < outerLength ? inner : outer;
+//        var longer = innerLength < outerLength ? outer : inner;
+//        var shorterLength = shorter.length();
+//        var longerLength = longer.length();
+//
+//
+//        var totalArea = polygon.areaUnsigned();
+//        var removeArea = totalArea / 4;
+//
+//        if (innerLength < outerLength)
+//            removeArea = totalArea - removeArea;
+//
+//        var totalHeight = Util.extendLine(longer).closestPoint(shorter.getStart()).distanceTo(shorter.getStart());
+//        var removeDirection = Vector.subtract(shorter.getStart(), Util.extendLine(longer).closestPoint(shorter.getStart()));
+//        removeDirection.normalize();
+//
+//        var calcArea = 0.5 * totalHeight * (shorterLength + longerLength);
+//        assert DoubleUtil.close(calcArea, totalArea) : calcArea + " != " + totalArea;
+//
+//        var midLength = Math.sqrt(2 * shorterLength * removeArea + longerLength * (longerLength * totalHeight - 2 * removeArea)) / Math.sqrt(totalHeight);
+//        var removeDistance = (2 * removeArea) / (midLength + longerLength);
+//
+//        assert shorterLength < midLength || DoubleUtil.close(shorterLength, midLength);
+//        assert midLength < longerLength || DoubleUtil.close(midLength, longerLength);
+//        assert removeDistance > 0;
+//        assert removeDistance < totalHeight;
+//
+//        System.out.println("midLength = " + midLength);
+//        System.out.println("removeDistance = " + removeDistance);
+//
+//        var removeVector = Vector.multiply(removeDistance, removeDirection);
+//        var mid = longer.clone();
+//        mid.translate(removeVector);
+//        var midLine = Util.extendLine(mid);
+//
+//        data.geometries.add(midLine);
+//
+//        mid.setStart((Vector) polygon.edge(1).intersect(midLine).get(0));
+//        mid.setEnd((Vector) polygon.edge(3).intersect(midLine).get(0));
+//
+//        assert DoubleUtil.close(mid.length(), midLength);
+//
+//        var upper = new Polygon(inner.getStart().clone(), inner.getEnd().clone(), mid.getStart().clone(), mid.getEnd().clone());
+//        var lower = new Polygon(mid.getStart().clone(), mid.getEnd().clone(), outer.getEnd().clone(), outer.getStart().clone());
+//
+//        upper.translate(longerLength * 1.5, 0);
+//        lower.translate(longerLength * 1.5, -10);
+//
+//        var upperArea = upper.areaUnsigned();
+//        var lowerArea = lower.areaUnsigned();
+//
+//        assert DoubleUtil.close(upperArea, removeArea) || DoubleUtil.close(lowerArea, removeArea);
+//
+//        data.geometries.add(upper);
+//        data.geometries.add(lower);
+//    }
 
     public static void draw(Data data, DrawPanel panel) {
 
