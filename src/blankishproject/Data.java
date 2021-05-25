@@ -40,6 +40,7 @@ public class Data {
 
     public int[] clockwiseClassifications;
     public int[] counterClockwiseClassifications;
+    public int[] significance;
     public int currentIndex;
 
     // Debug geometry
@@ -49,6 +50,10 @@ public class Data {
     public boolean copyMode = false;
 
     // Debug Draw Options
+    public boolean drawOrientations = false;
+    public boolean drawClassifications = false;
+    public boolean drawSignificance = false;
+
     public boolean drawConvexityArcs = false;
     public boolean drawConvexityEdges = false;
     public boolean drawPositiveContractions = false;
@@ -64,9 +69,9 @@ public class Data {
         this.side = new SidePanel(this);
 
         orientations.addOrientationDegrees(0);
-//        orientations.addOrientationDegrees(0 + 45);
+        //orientations.addOrientationDegrees(0 + 45);
         orientations.addOrientationDegrees(90);
-//        orientations.addOrientationDegrees(90 + 45);
+        //orientations.addOrientationDegrees(90 + 45);
     }
 
     public void select(Vector loc, double distance) {

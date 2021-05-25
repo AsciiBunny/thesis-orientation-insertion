@@ -121,6 +121,10 @@ public class OrientationSet implements Iterable<OrientationSet.Orientation> {
             return index;
         }
 
+        public double getDistance(Vector direction) {
+            return Math.min(this.direction.computeClockwiseAngleTo(direction), this.direction.computeCounterClockwiseAngleTo(direction));
+        }
+
         @Override
         public String toString() {
             return "Orientation{" +

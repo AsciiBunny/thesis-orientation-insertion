@@ -19,7 +19,6 @@ import blankishproject.deciders.IDecider;
 import nl.tue.geometrycore.geometryrendering.styling.SizeMode;
 import nl.tue.geometrycore.gui.sidepanel.SideTab;
 import nl.tue.geometrycore.gui.sidepanel.TabbedSidePanel;
-import nl.tue.geometrycore.geometry.linear.Polygon;
 
 import java.awt.*;
 
@@ -65,6 +64,8 @@ public class SidePanel extends TabbedSidePanel {
         addGeometryInformationSection(tab);
         tab.addSpace(5);
         addSchematizationRunningSection(tab);
+        tab.addSpace(5);
+        addSchematizationDebugDrawOptionsSection(tab);
     }
 
     private void addSimplificationTab() {
@@ -80,8 +81,10 @@ public class SidePanel extends TabbedSidePanel {
         tab.addSpace(5);
         addSimplificationInformationSection(tab);
         tab.addSpace(5);
-        addDebugDrawOptionsSection(tab);
+        addSimplificationDebugDrawOptionsSection(tab);
     }
+
+    //region Geometry
 
     private void addGeometryOptionsSection(SideTab tab) {
         tab.addLabel("Geometry Options").setFont(titleFont);
@@ -113,6 +116,10 @@ public class SidePanel extends TabbedSidePanel {
         tab.addComponent(areaLabel);
     }
 
+    //endregion Geometry
+
+    //region Schematization
+
     private void addSchematizationRunningSection(SideTab tab) {
         tab.addLabel("Algorithm Running").setFont(titleFont);
         tab.addSeparator(0);
@@ -120,6 +127,31 @@ public class SidePanel extends TabbedSidePanel {
         tab.addButton("Run Algorithm [r]", (e -> data.runSchematizationAlgorithm()));
         tab.addButton("Finish Algorithm [f]", (e -> data.finishSchematizationAlgorithm()));
     }
+
+    private void addSchematizationDebugDrawOptionsSection(SideTab tab) {
+        tab.addLabel("Debug Draw Options").setFont(titleFont);
+        tab.addSeparator(0);
+
+        tab.addCheckbox("Draw Orientations", data.drawOrientations, (e, b) -> {
+            data.drawOrientations = b;
+            data.draw.repaint();
+        });
+
+        tab.addCheckbox("Draw Classifications", data.drawClassifications, (e, b) -> {
+            data.drawClassifications = b;
+            data.draw.repaint();
+        });
+
+        tab.addCheckbox("Draw Significance", data.drawSignificance, (e, b) -> {
+            data.drawSignificance = b;
+            data.draw.repaint();
+        });
+    }
+
+
+    //endregion Schematization
+
+    //region Simplification
 
     private void addSimplificationRunningSection(SideTab tab) {
         tab.addLabel("Algorithm Running").setFont(titleFont);
@@ -183,7 +215,7 @@ public class SidePanel extends TabbedSidePanel {
         tab.addComponent(lastCycleTimeTakenLabel);
     }
 
-    private void addDebugDrawOptionsSection(SideTab tab) {
+    private void addSimplificationDebugDrawOptionsSection(SideTab tab) {
         tab.addLabel("Debug Draw Options").setFont(titleFont);
         tab.addSeparator(0);
 
@@ -212,6 +244,8 @@ public class SidePanel extends TabbedSidePanel {
             data.draw.repaint();
         });
     }
+
+    //endregion Simplification
 
     @Override
     public void repaint() {
