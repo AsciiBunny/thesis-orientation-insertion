@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import static blankishproject.Util.extendLine;
 import static blankishproject.Util.undirectedEquals;
 
-public abstract class NormalMove {
+public abstract class NormalMove extends Move {
 
     protected final Configuration configuration;
     protected final LineSegment contraction;
@@ -33,6 +33,16 @@ public abstract class NormalMove {
         this.contraction = calculateContraction();
 
         this.blockingVectors = calculateBlockingVectors(polygon);
+    }
+
+    @Override
+    public boolean isValid() {
+        return hasValidContraction();
+    }
+
+    @Override
+    public double getAffectedArea() {
+        return getArea();
     }
 
     public void recalculate() {
@@ -80,7 +90,7 @@ public abstract class NormalMove {
         if (DoubleUtil.close(moveDistance, distance))
             return getArea();
 
-        var move = getMoveForDistance(moveDistance);
+        var move = getForDistance(moveDistance);
         return getAreaForMove(move);
     }
 
@@ -89,7 +99,7 @@ public abstract class NormalMove {
         return polygon.areaUnsigned();
     }
 
-    public LineSegment getMoveForArea(double removeArea) {
+    public LineSegment getForArea(double removeArea) {
         if (DoubleUtil.close(removeArea, 0))
             return configuration.inner;
         if (DoubleUtil.close(removeArea, getArea()))
@@ -108,14 +118,14 @@ public abstract class NormalMove {
 
         assert removeDistance > 0 && removeDistance < distance : "Invalid distance calculated: " + removeDistance;
 
-        var mid = getMoveForDistance(removeDistance);
+        var mid = getForDistance(removeDistance);
 
         assert DoubleUtil.close(midLength, mid.length()) : "Invalid midLength: " + midLength + " != " + mid.length();
 
         return mid;
     }
 
-    public LineSegment getMoveForDistance(double moveDistance) {
+    public LineSegment getForDistance(double moveDistance) {
         var removeVector = Vector.multiply(moveDistance, direction);
         var mid = configuration.inner.clone();
         mid.translate(removeVector);
@@ -127,19 +137,19 @@ public abstract class NormalMove {
         return mid;
     }
 
-    public void applyMoveForArea(double removeArea) {
-        var move = DoubleUtil.close(removeArea, this.getArea()) ? contraction : getMoveForArea(removeArea);
+    public void applyForArea(double removeArea) {
+        var move = DoubleUtil.close(removeArea, this.getArea()) ? contraction : getForArea(removeArea);
         //var areaBefore = getArea();
-        applyMove(move);
+        apply(move);
         //assert DoubleUtil.close(areaBefore - removeArea, getArea()) : "Invalid area: " + areaBefore + " - " + removeArea + " != " + getArea();
     }
 
-    public void applyMoveForDistance(double distance) {
-        var move = DoubleUtil.close(distance, this.getDistance()) ? contraction : getMoveForDistance(distance);
-        applyMove(move);
+    public void applyForDistance(double distance) {
+        var move = DoubleUtil.close(distance, this.getDistance()) ? contraction : getForDistance(distance);
+        apply(move);
     }
 
-    private void applyMove(LineSegment move) {
+    private void apply(LineSegment move) {
         var inner = configuration.inner;
         inner.getStart().set(move.getStart());
         inner.getEnd().set(move.getEnd());
@@ -147,8 +157,8 @@ public abstract class NormalMove {
         this.distance = calculateDistance();
     }
 
-    public void applyContraction() {
-        applyMove(contraction);
+    public void apply() {
+        apply(contraction);
     }
 
     //region initialization calculations

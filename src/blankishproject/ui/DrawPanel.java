@@ -49,7 +49,9 @@ public class DrawPanel extends GeometryPanel {
         setStroke(Color.black, data.strokewidth, Dashing.SOLID);
         if (data.schematization != null && data.schematization.vertexCount() > 0)
             draw(data.schematization);
-        //draw(data.simplification);
+
+        if (data.simplification != null && data.simplification.vertexCount() > 0)
+            draw(data.simplification);
 
         if (data.copyMode)
             return;

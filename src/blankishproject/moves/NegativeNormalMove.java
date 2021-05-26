@@ -11,6 +11,11 @@ public class NegativeNormalMove extends NormalMove {
         super(configuration, polygon);
     }
 
+    @Override
+    public MoveType getType() {
+        return MoveType.NEGATIVE;
+    }
+
     /**
      * Calculates the new inner edge for this contraction, if it exists.
      * <br> Complexity O(1)

@@ -3,12 +3,9 @@ package blankishproject.deciders;
 import blankishproject.edgelist.Configuration;
 import blankishproject.edgelist.ConfigurationList;
 import blankishproject.moves.MoveType;
-import blankishproject.moves.NormalMove;
-import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.util.DoubleUtil;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,9 +15,10 @@ public class MinimalComplementaryPairDecider implements IDecider {
 
     @Override
     public List<Decision> findMoves(Polygon polygon, ConfigurationList configurations) {
-        var bestSpecialPair = findSpecialPair(polygon, configurations);
+        var bestSpecialPair = findPairMove(configurations);
         var bestNormalPair = findNormalPair(polygon, configurations);
 
+        System.out.println("bestSpecialPair = " + bestSpecialPair.size());
         return bestSpecialPair.size() > 0 ? bestSpecialPair : bestNormalPair;
     }
 
@@ -64,89 +62,77 @@ public class MinimalComplementaryPairDecider implements IDecider {
 
     }
 
-    private List<Decision> findSpecialPair(Polygon polygon, ConfigurationList configurations) {
+    private List<Decision> findPairMove(ConfigurationList configurations) {
         var bestArea = Double.MAX_VALUE;
         List<Decision> best = Collections.emptyList();
 
         for (int i = 0; i < configurations.size(); i++) {
-            var a = configurations.get((i - 2 + configurations.size()) % configurations.size());
-            var b = configurations.get(i);
+            var configuration = configurations.get(i);
 
-            if (!areNeighbouring(a, b))
-                continue;
-
-            NormalMove move1 = null;
-            NormalMove move2 = null;
-
-            if (a.positiveNormalMove.hasValidContraction() && b.negativeNormalMove.hasValidContraction()) {
-                move1 = a.positiveNormalMove;
-                move2 = b.negativeNormalMove;
-                var area = calculateSpecialPairArea(a, b, move1, move2);
-                if (area < bestArea) {
-                    var decision1 = new Decision(a, MoveType.POSITIVE, area, true);
-                    var decision2 = new Decision(b, MoveType.NEGATIVE, area, true);
-                    best = List.of(decision1, decision2);
-                }
+            if (configuration.hasMove(MoveType.POSITIVE_PAIR)) {
+                var move = configuration.getMove(MoveType.POSITIVE_PAIR);
+                if (move.getAffectedArea() < bestArea)
+                    best = Collections.singletonList(new Decision(configuration, MoveType.POSITIVE_PAIR, move.getAffectedArea(), false));
             }
 
-            if (a.negativeNormalMove.hasValidContraction() && b.positiveNormalMove.hasValidContraction()) {
-                move1 = a.negativeNormalMove;
-                move2 = b.positiveNormalMove;
-                var area = calculateSpecialPairArea(a, b, move1, move2);
-                if (area < bestArea) {
-                    var decision1 = new Decision(a, MoveType.NEGATIVE, area, true);
-                    var decision2 = new Decision(b, MoveType.POSITIVE, area, true);
-                    best = List.of(decision1, decision2);
-                }
+            if (configuration.hasMove(MoveType.NEGATIVE_PAIR)) {
+                var move = configuration.getMove(MoveType.NEGATIVE_PAIR);
+                if (move.getAffectedArea() < bestArea)
+                    best = Collections.singletonList(new Decision(configuration, MoveType.NEGATIVE_PAIR, move.getAffectedArea(), false));
             }
+
         }
 
         return best;
     }
-
-    private double calculateSpecialPairArea(Configuration c1, Configuration c2, NormalMove move1, NormalMove move2) {
-        final var sharedLength = c1.next.length();
-        final var sharedDirection = c1.next.getDirection();
-
-        final var height1 = move1.getDistance();
-        final var height2 = move2.getDistance();
-
-        final var innerLength1 = c1.inner.length();
-        final var innerLength2 = c2.inner.length();
-
-        final var outerLength1 = move1.getContraction().length();
-        final var outerLength2 = move2.getContraction().length();
-
-        // Todo: better naming of both ratios
-        final var ratio1 = (outerLength1 - innerLength1) / height1;
-        final var ratio2 = (outerLength2 - innerLength2) / height2;
-
-        final var angle1 = Vector.dotProduct(move1.getDirection(), sharedDirection);
-        final var angle2 = Vector.dotProduct(move2.getDirection(), Vector.multiply(-1, sharedDirection));
-
-        var a = angle1 * angle1 * ratio1 - angle2 * angle2 * ratio2;
-        var b = 2 * angle1 * innerLength1 + 2 * angle2 * angle2 * sharedLength * ratio2 + 2 * angle2 * innerLength2;
-        var c = - angle2 * angle2 * sharedLength * sharedLength * ratio2 - 2 * angle2 * innerLength2 * sharedLength;
-
-        var distance1 = DoubleUtil.solveQuadraticEquationForSmallestPositive(a, b, c, DoubleUtil.EPS);
-        var distance2 = sharedLength - distance1;
-
-        assert distance1 > 0 && distance1 < sharedLength : distance1 + " not in <0.0 , " + sharedLength + ">";
-        assert distance2 > 0 && distance2 < sharedLength : distance2 + " not in <0.0 ," + sharedLength + ">";
-        assert !DoubleUtil.close(distance1, 0) && !DoubleUtil.close(distance2, 0);
-
-        // Find areas of potential moves. Take into account that move cant be larger then full contraction.
-        var area1 = distance1 * angle1 <= move1.getDistance() + DoubleUtil.EPS ? move1.getAreaForDistance(distance1 * angle1) : move1.getArea();
-        var area2 = distance2 * angle2 <= move2.getDistance() + DoubleUtil.EPS ? move2.getAreaForDistance(distance2 * angle2) : move2.getArea();
-
-        var expectedArea1 = angle1 * distance1 * 0.5 * (angle1 * distance1 * ratio1 + 2 * innerLength1);
-        var expectedArea2 = angle2 * distance2 * 0.5 * (angle2 * distance2 * ratio2 + 2 * innerLength2);
-
-        assert DoubleUtil.close(expectedArea1, expectedArea2) : expectedArea1 + "!=" + expectedArea2;
-
-        // move areas should always be equal thus actual move is limited by the smallest one
-        return Math.min(area1, area2);
-    }
+//
+//    // TODO: replace with PairNormalMove moves
+//    private double calculateSpecialPairArea(Configuration c1, Configuration c2, NormalMove move1, NormalMove move2) {
+//        final var sharedLength = c1.next.length();
+//        final var sharedDirection = c1.next.getDirection();
+//
+//        final var height1 = move1.getDistance();
+//        final var height2 = move2.getDistance();
+//
+//        final var innerLength1 = c1.inner.length();
+//        final var innerLength2 = c2.inner.length();
+//
+//        final var outerLength1 = move1.getContraction().length();
+//        final var outerLength2 = move2.getContraction().length();
+//
+//        // Todo: better naming of both ratios
+//        final var ratio1 = (outerLength1 - innerLength1) / height1;
+//        final var ratio2 = (outerLength2 - innerLength2) / height2;
+//
+//        final var angle1 = Vector.dotProduct(move1.getDirection(), sharedDirection);
+//        final var angle2 = Vector.dotProduct(move2.getDirection(), Vector.multiply(-1, sharedDirection));
+//
+//        var a = angle1 * angle1 * ratio1 - angle2 * angle2 * ratio2;
+//        var b = 2 * angle1 * innerLength1 + 2 * angle2 * angle2 * sharedLength * ratio2 + 2 * angle2 * innerLength2;
+//        var c = -angle2 * angle2 * sharedLength * sharedLength * ratio2 - 2 * angle2 * innerLength2 * sharedLength;
+//
+//        var distance1 = DoubleUtil.solveQuadraticEquationForSmallestPositive(a, b, c, DoubleUtil.EPS);
+//        var distance2 = sharedLength - distance1;
+//
+//        System.out.println("distance1 = " + distance1);
+//        System.out.println("distance2 = " + distance2);
+//
+//        assert distance1 > 0 && distance1 < sharedLength : distance1 + " not in <0.0 , " + sharedLength + ">" + c1.inner;
+//        assert distance2 > 0 && distance2 < sharedLength : distance2 + " not in <0.0 ," + sharedLength + ">";
+//        assert !DoubleUtil.close(distance1, 0) && !DoubleUtil.close(distance2, 0);
+//
+//        // Find areas of potential moves. Take into account that move cant be larger then full contraction.
+//        var area1 = distance1 * angle1 <= move1.getDistance() + DoubleUtil.EPS ? move1.getAreaForDistance(distance1 * angle1) : move1.getArea();
+//        var area2 = distance2 * angle2 <= move2.getDistance() + DoubleUtil.EPS ? move2.getAreaForDistance(distance2 * angle2) : move2.getArea();
+//
+//        var expectedArea1 = angle1 * distance1 * 0.5 * (angle1 * distance1 * ratio1 + 2 * innerLength1);
+//        var expectedArea2 = angle2 * distance2 * 0.5 * (angle2 * distance2 * ratio2 + 2 * innerLength2);
+//
+//        assert DoubleUtil.close(expectedArea1, expectedArea2) : expectedArea1 + "!=" + expectedArea2;
+//
+//        // move areas should always be equal thus actual move is limited by the smallest one
+//        return Math.min(area1, area2);
+//    }
 
     private boolean doCollide(Configuration positive, Configuration negative) {
         return undirectedEquals(negative.inner, positive.previous)
@@ -159,8 +145,8 @@ public class MinimalComplementaryPairDecider implements IDecider {
         // These are handled by special neighbouring case
     }
 
-    private boolean areNeighbouring(Configuration first, Configuration second) {
-        return (undirectedEquals(second.next, first.previous) && ((second.isEndReflex() && first.isStartConvex()) || (second.isEndConvex() && first.isStartReflex())))
-                || (undirectedEquals(first.next, second.previous) && ((first.isEndReflex() && second.isStartConvex()) || (first.isEndConvex() && second.isStartReflex())));
-    }
+//    private boolean areNeighbouring(Configuration first, Configuration second) {
+//        return (undirectedEquals(second.next, first.previous) && ((second.isEndReflex() && first.isStartConvex()) || (second.isEndConvex() && first.isStartReflex())))
+//                || (undirectedEquals(first.next, second.previous) && ((first.isEndReflex() && second.isStartConvex()) || (first.isEndConvex() && second.isStartReflex())));
+//    }
 }

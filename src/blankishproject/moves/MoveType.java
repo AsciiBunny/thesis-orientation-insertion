@@ -3,5 +3,7 @@ package blankishproject.moves;
 public enum MoveType {
     NONE,
     POSITIVE,
-    NEGATIVE;
+    NEGATIVE,
+    POSITIVE_PAIR,
+    NEGATIVE_PAIR;
 }

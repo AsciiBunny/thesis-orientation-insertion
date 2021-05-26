@@ -1,7 +1,11 @@
 package blankishproject;
 
+import blankishproject.deciders.Decision;
 import blankishproject.deciders.IDecider;
 import blankishproject.edgelist.ConfigurationList;
+import blankishproject.moves.MoveType;
+import blankishproject.moves.NormalMove;
+import blankishproject.moves.PairNormalMove;
 import blankishproject.ui.DrawPanel;
 import nl.tue.geometrycore.geometry.curved.CircularArc;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
@@ -12,6 +16,8 @@ import nl.tue.geometrycore.geometryrendering.styling.TextAnchor;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Simplification {
 
@@ -42,7 +48,7 @@ public class Simplification {
         var polygon = data.simplification;
 
         var before = polygon.vertexCount();
-        while(true) {
+        while (true) {
             var done = !iteration(data, polygon);
 
             var after = polygon.vertexCount();
@@ -68,16 +74,13 @@ public class Simplification {
     }
 
     public static boolean iteration(Data data, Polygon polygon) {
-        var configurationList = new ConfigurationList(polygon);
+        var configurationList = generateConfigurations(polygon);
 
         var debugLines = new GeometryList<LineSegment>();
         var debugArrows = new GeometryList<LineSegment>();
 
 
-        // Determine minimal configuration pair
-        //      Find smallest contraction possible O(n)
-        //      Pair with the smallest non-conflicting contraction
-        //
+        // Find moves
         var moves = new ArrayList<>(IDecider.deciders.get(data.deciderType).findMoves(polygon, configurationList));
         var madeChanges = moves.size() > 0;
 
@@ -86,6 +89,7 @@ public class Simplification {
         lastCycleAreaEffected = 0;
         lastCycleVerticesRemoved = 0;
 
+        // Apply found moves
         while (moves.size() > 0) {
             var min = moves.remove(0);
             var configuration = min.configuration;
@@ -114,6 +118,28 @@ public class Simplification {
         data.debugArrows.put(Color.blue, debugArrows);
 
         return madeChanges;
+    }
+
+    public static ConfigurationList generateConfigurations(Polygon polygon) {
+        var configurations = new ConfigurationList(polygon);
+
+        for (int i = 0; i < configurations.size(); i++) {
+            var a = configurations.get((i - 2 + configurations.size()) % configurations.size());
+            var b = configurations.get(i);
+
+            if (!a.isSpecialPairNeighbouring(b))
+                continue;
+
+            if (a.positiveNormalMove.hasValidContraction() && b.negativeNormalMove.hasValidContraction()) {
+                a.positivePairMove = new PairNormalMove(a, b, a.positiveNormalMove, b.negativeNormalMove, polygon);
+            }
+
+            if (a.negativeNormalMove.hasValidContraction() && b.positiveNormalMove.hasValidContraction()) {
+                a.negativePairMove = new PairNormalMove(a, b, a.negativeNormalMove, b.positiveNormalMove, polygon);
+            }
+        }
+
+        return configurations;
     }
 
     //region debug

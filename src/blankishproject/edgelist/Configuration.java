@@ -1,10 +1,7 @@
 package blankishproject.edgelist;
 
 import blankishproject.Util;
-import blankishproject.moves.MoveType;
-import blankishproject.moves.NegativeNormalMove;
-import blankishproject.moves.NormalMove;
-import blankishproject.moves.PositiveNormalMove;
+import blankishproject.moves.*;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Line;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
@@ -14,6 +11,8 @@ import nl.tue.geometrycore.util.DoubleUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static blankishproject.Util.undirectedEquals;
 
 public class Configuration {
 
@@ -25,6 +24,8 @@ public class Configuration {
 
     public final PositiveNormalMove positiveNormalMove;
     public final NegativeNormalMove negativeNormalMove;
+    public PairNormalMove positivePairMove;
+    public PairNormalMove negativePairMove;
 
     public Configuration(Polygon polygon, int index, LineSegment previous, LineSegment inner, LineSegment next) {
         this.polygon = polygon;
@@ -37,12 +38,23 @@ public class Configuration {
         this.negativeNormalMove = new NegativeNormalMove(this, polygon);
     }
 
-    public NormalMove getMove(MoveType moveType) {
+    public Move getMove(MoveType moveType) {
         return switch (moveType) {
             case POSITIVE -> positiveNormalMove;
             case NEGATIVE -> negativeNormalMove;
+            case POSITIVE_PAIR -> positivePairMove;
+            case NEGATIVE_PAIR -> negativePairMove;
             default -> throw new IllegalStateException("Unexpected value: " + moveType);
         };
+    }
+
+    public boolean hasMove(MoveType moveType) {
+        var move = getMove(moveType);
+        if (move == null)
+            return false;
+        if (!move.isValid())
+            return false;
+        return true;
     }
 
     /**
@@ -52,7 +64,7 @@ public class Configuration {
     public List<Integer> performMove(MoveType moveType, double area, boolean cleanup) {
         var move = getMove(moveType);
 
-        move.applyMoveForArea(area);
+        move.applyForArea(area);
 
         if (cleanup) {
             // TODO: Keep configurationList in sync with polygon during cleanup
@@ -60,17 +72,6 @@ public class Configuration {
         } else {
             return Collections.emptyList();
         }
-    }
-
-    /**
-     * Completely applies contraction for move. Does cleanup
-     * <br> Complexity O(1) | O(n) when other configurations get updated, this is not yet implemented
-     */
-    public List<Integer> performContraction(MoveType moveType) {
-        var move = getMove(moveType);
-        move.applyContraction();
-        // Polygon cleanup TODO: Keep configurationList in sync with polygon during cleanup
-        return moveCleanup();
     }
 
     private List<Integer> moveCleanup() {
@@ -250,4 +251,9 @@ public class Configuration {
         return isStartReflex() && isEndReflex();
     }
     //endregion Convexity/Reflexity
+
+    public boolean isSpecialPairNeighbouring(Configuration other) {
+        return (undirectedEquals(other.next, this.previous) && ((other.isEndReflex() && this.isStartConvex()) || (other.isEndConvex() && this.isStartReflex())))
+                || (undirectedEquals(this.next, other.previous) && ((this.isEndReflex() && other.isStartConvex()) || (this.isEndConvex() && other.isStartReflex())));
+    }
 }

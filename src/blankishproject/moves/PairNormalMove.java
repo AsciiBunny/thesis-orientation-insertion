@@ -1,6 +1,7 @@
 package blankishproject.moves;
 
 import blankishproject.edgelist.Configuration;
+import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.util.DoubleUtil;
 
@@ -14,8 +15,6 @@ public class PairNormalMove extends Move {
     protected final NormalMove pairedMove;
 
     protected boolean isValid;
-    protected double distance;
-    protected double pairedDistance;
     protected double area;
 
     public PairNormalMove(Configuration configuration, Configuration pairedConfiguration, NormalMove move, NormalMove pairedMove, Polygon polygon) {
@@ -26,24 +25,64 @@ public class PairNormalMove extends Move {
 
         calculateValidity();
         if (isValid) {
-            calculateDistances();
             calculateArea();
         }
+    }
+
+
+    @Override
+    public MoveType getType() {
+        return move.getType() == MoveType.POSITIVE ? MoveType.POSITIVE_PAIR : MoveType.NEGATIVE_PAIR;
     }
 
     public boolean isValid() {
         return isValid;
     }
 
-    private void calculateValidity() {
-        var sharedEdge = undirectedEquals(pairedConfiguration.next, configuration.previous) && (pairedConfiguration.isEndReflex() && configuration.isStartConvex() || pairedConfiguration.isEndConvex() && configuration.isStartReflex());
-        var noBlocking = true;
-        isValid = sharedEdge && noBlocking;
+    @Override
+    public double getAffectedArea() {
+        return area;
     }
 
-    private void calculateDistances() {
+    @Override
+    public void applyForArea(double area) {
+        assert DoubleUtil.close(area, this.area) : "Cannot partially apply PairMove: " + area + " != " + this.area;
+        apply();
+    }
+
+    @Override
+    public void apply() {
+        assert move.isValid();
+        assert pairedMove.isValid();
+        assert configuration.getMove(move.getType()).isValid();
+        assert pairedConfiguration.getMove(pairedMove.getType()).isValid();
+
+        var removed = configuration.performMove(move.getType(), area, true);
+
+        removed.forEach(i -> {
+            if (i < pairedConfiguration.index) {
+                pairedConfiguration.index--;
+            }
+        });
+        // TODO: Might cause issues as cleanup results are not returned
+        pairedConfiguration.performMove(pairedMove.getType(), area, true);
+    }
+
+    private void calculateValidity() {
+        var sharedEdge = undirectedEquals(configuration.next, pairedConfiguration.previous);
+        var validReflexity = (configuration.isEndReflex() && pairedConfiguration.isStartConvex())
+                || (configuration.isEndConvex() && pairedConfiguration.isStartReflex());
+        // TODO: calculate blocking numbers for expected areas
+        var noBlocking = true;
+
+        isValid = sharedEdge && validReflexity && noBlocking;
+    }
+
+    // Todo: Calculate area instead? Can do moves for area in NormalMove
+    private void calculateArea() {
         // Collect needed variables
         final var sharedLength = configuration.next.length();
+        final var sharedDirection = configuration.next.getDirection();
 
         final var height1 = move.getDistance();
         final var height2 = pairedMove.getDistance();
@@ -54,51 +93,41 @@ public class PairNormalMove extends Move {
         final var outerLength1 = move.getContraction().length();
         final var outerLength2 = pairedMove.getContraction().length();
 
+        // Todo: better naming of ratios/angles
         final var ratio1 = (outerLength1 - innerLength1) / height1;
         final var ratio2 = (outerLength2 - innerLength2) / height2;
 
-        // Adjust angles to angle within right triangle so sin can be used to scale on shared edge
-        // Right angle should give 1 as value
-        var rawAngle1 = configuration.getEndAngle();
-        rawAngle1 = rawAngle1 > Math.PI ? 2 * Math.PI - rawAngle1 : rawAngle1;
-        rawAngle1 = rawAngle1 > Math.PI / 2 ? Math.PI - rawAngle1 : rawAngle1;
-        var rawAngle2 = pairedConfiguration.getStartAngle();
-        rawAngle2 = rawAngle2 > Math.PI ? 2 * Math.PI - rawAngle2 : rawAngle2;
-        rawAngle2 = rawAngle2 > Math.PI / 2 ? Math.PI - rawAngle2 : rawAngle2;
-
-        final var angle1 = 1 / Math.sin(rawAngle1);
-        final var angle2 = 1 / Math.sin(rawAngle2);
+        final var angle1 = Vector.dotProduct(move.getDirection(), sharedDirection);
+        final var angle2 = Vector.dotProduct(pairedMove.getDirection(), Vector.multiply(-1, sharedDirection));
 
         // Use variables to calculate the a,b,c for a quadratic equation
-        var a = angle1 * angle1 * innerLength1 * ratio1 - angle2 * angle2 * innerLength2 * ratio2;
-        var b = angle1 * innerLength1 + angle2 * innerLength2 + 2 * angle2 * angle2 * innerLength2 * ratio2 * sharedLength;
-        var c = -angle2 * angle2 * innerLength2 * sharedLength * sharedLength * ratio2 - angle2 * innerLength2 * sharedLength;
+        var a = angle1 * angle1 * ratio1 - angle2 * angle2 * ratio2;
+        var b = 2 * angle1 * innerLength1 + 2 * angle2 * angle2 * sharedLength * ratio2 + 2 * angle2 * innerLength2;
+        var c = -angle2 * angle2 * sharedLength * sharedLength * ratio2 - 2 * angle2 * innerLength2 * sharedLength;
 
-        var distance1 = DoubleUtil.solveQuadraticEquationForSmallestPositive(a, b, c, DoubleUtil.EPS);
-        var distance2 = sharedLength - distance1;
+        var distance = DoubleUtil.solveQuadraticEquationForSmallestPositive(a, b, c, DoubleUtil.EPS);
+        var pairedDistance = sharedLength - distance;
 
-        assert distance1 > 0 && distance1 < sharedLength : distance1 + " not in [0.0 , " + sharedLength + "]";
-        assert distance2 > 0 && distance2 < sharedLength : distance2 + " not in [0.0 ," + sharedLength + "]";
-        assert !DoubleUtil.close(distance1, 0) && !DoubleUtil.close(distance2, 0);
+        //assert distance > 0 && distance < sharedLength : distance + " not in <0.0 , " + sharedLength + ">";
+        //assert pairedDistance > 0 && pairedDistance < sharedLength : pairedDistance + " not in <0.0 ," + sharedLength + ">";
+        //assert !DoubleUtil.close(distance, 0) && !DoubleUtil.close(pairedDistance, 0);
 
-        distance = Math.min(distance1, move.distance);
-        pairedDistance = Math.min(distance1, pairedMove.distance);
-    }
+        if (distance * angle1 < 0 || DoubleUtil.close(distance * angle1, 0)) {
+            isValid = false;
+            return;
+        }
 
-    private void calculateArea() {
-        // Find areas of potential moves. Take into account that move cant be larger then full contraction.
-        var area1 = move.getAreaForDistance(distance);
-        var area2 = pairedMove.getAreaForDistance(pairedDistance);
+        // If found distance larger than move would allow, adjust target area down
+        if (distance * angle1 < move.distance - DoubleUtil.EPS) {
+            this.area = move.getAreaForDistance(distance * angle1);
+        } else {
+            this.area = move.getArea();
+        }
 
-        area = Math.min(area1, area2);
-    }
+        // If determined target area is larger then paired move would allow, adjust down too
+        if (this.area > Math.abs(pairedMove.getArea() + DoubleUtil.EPS)) {
+            this.area = pairedMove.getArea();
+        }
 
-    public boolean isMoveContraction() {
-        return DoubleUtil.close(distance, move.getDistance());
-    }
-
-    public boolean isPairedMoveContraction() {
-        return DoubleUtil.close(pairedDistance, pairedMove.getDistance())
-                || !isMoveContraction();
     }
 }

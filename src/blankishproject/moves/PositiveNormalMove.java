@@ -11,6 +11,11 @@ public class PositiveNormalMove extends NormalMove {
         super(configuration, polygon);
     }
 
+    @Override
+    public MoveType getType() {
+        return MoveType.POSITIVE;
+    }
+
     /**
      * Calculates the new inner edge for this contraction, if it exists.
      * <br> Complexity O(1)
@@ -45,4 +50,6 @@ public class PositiveNormalMove extends NormalMove {
 
         return Math.min(previousDistance, nextDistance);
     }
+
+
 }

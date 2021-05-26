@@ -15,7 +15,7 @@ public class Decision {
         this.configuration = configuration;
         this.type = type;
         this.requiresCleanup = true;
-        this.removeArea = configuration.getMove(type).getArea();
+        this.removeArea = configuration.getMove(type).getAffectedArea();
     }
 
     public Decision(Configuration configuration, MoveType type, double removeArea) {
