@@ -176,11 +176,14 @@ public class Schematization {
                 var inbetween = Vector.divide(Vector.add(current, next), 2);
 
                 var points = buildStaircase(data.orientations, current, inbetween, prev, clockwise, currentSignificance, steps);
+                points.remove(points.size() - 1);
                 points.forEach(line::addVertex);
 
                 var next_points = buildStaircase(data.orientations, next, inbetween, nextNext, counterClockwise, nextSignificance, steps);
                 Collections.reverse(next_points);
+                next_points.remove(0);
                 next_points.forEach(line::addVertex);
+
                 line.addVertex(next.clone());
             } else {
                 var points = buildStaircase(data.orientations, current, next, prev, clockwise, currentSignificance, steps);
@@ -222,17 +225,21 @@ public class Schematization {
 
         var now = start.clone();
         if (significance >= 0) {
+            // Significance implies we have an evading edge, so split up steps to do evading ones first
             for (int i = 0; i < steps; i++) {
-                buildStep(points, now, assignedStep, associatedStep);
+                buildStep(points, now, assignedStep, associatedStep, true);
             }
+            // Remove last point as last step isn't actually a half step
+            points.remove(points.size() - 1);
             for (int i = 0; i < steps; i++) {
-                buildStep(points, now, associatedStep, assignedStep);
+                buildStep(points, now, associatedStep, assignedStep, true);
             }
         } else {
             for (int i = 0; i < steps; i++) {
-                buildStep(points, now, assignedStep, associatedStep);
-                buildStep(points, now, associatedStep, assignedStep);
+                buildStep(points, now, assignedStep, associatedStep, false);
+                buildStep(points, now, associatedStep, assignedStep, false);
             }
+            points.add(now);
         }
 
 
@@ -256,11 +263,11 @@ public class Schematization {
         return before.getDistance(direction) < before.getDistance(backDirection) ? before : after;
     }
 
-    public static void buildStep(List<Vector> points, Vector now, Vector a, Vector b) {
+    public static void buildStep(List<Vector> points, Vector now, Vector a, Vector b, boolean halfStep) {
         now.translate(a);
         points.add(now.clone());
         now.translate(b);
-        points.add(now.clone());
+        if (halfStep) points.add(now.clone());
     }
 
     //region debug drawing
@@ -280,7 +287,7 @@ public class Schematization {
         if (data.drawClassifications)
             drawClassification(panel, data.original, data.clockwiseClassifications, data.counterClockwiseClassifications, data.orientations);
         if (data.drawSignificance)
-            drawSignificance(panel, data.original,data.significance, data.orientations);
+            drawSignificance(panel, data.original, data.significance, data.orientations);
     }
 
     private static void drawCompass(DrawPanel panel, OrientationSet orientations) {
