@@ -42,15 +42,16 @@ public class DrawPanel extends GeometryPanel {
     @Override
     protected void drawScene() {
         setSizeMode(data.sizemode);
-        setStroke(Color.lightGray, data.strokewidth, Dashing.SOLID);
 
-        draw(data.original);
+        setStroke(Color.lightGray, data.strokewidth, Dashing.SOLID);
+        if (data.original != null && data.original.vertexCount() > 0)
+            draw(data.original);
 
         setStroke(Color.black, data.strokewidth, Dashing.SOLID);
         if (data.schematization != null && data.schematization.vertexCount() > 0)
             draw(data.schematization);
 
-        if (data.simplification != null && data.simplification.vertexCount() > 0)
+        if (data.simplification != null && data.simplification.vertexCount() < data.original.vertexCount())
             draw(data.simplification);
 
         if (data.copyMode)

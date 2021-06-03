@@ -69,9 +69,9 @@ public class Data {
         this.side = new SidePanel(this);
 
         orientations.addOrientationDegrees(0);
-        //orientations.addOrientationDegrees(0 + 45);
+        orientations.addOrientationDegrees(0 + 45);
         orientations.addOrientationDegrees(90);
-        //orientations.addOrientationDegrees(90 + 45);
+        orientations.addOrientationDegrees(90 + 45);
     }
 
     public void select(Vector loc, double distance) {
@@ -135,6 +135,13 @@ public class Data {
 
     public void finishSimplificationAlgorithm() {
         Simplification.finish(this);
+        repaint();
+    }
+
+    public void setAsInputSimplificationAlgorithm() {
+        original = Util.finishPolyLine(schematization);
+        simplification = original.clone();
+        Schematization.init(this);
         repaint();
     }
 

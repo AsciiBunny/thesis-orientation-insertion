@@ -2,6 +2,8 @@ package blankishproject;
 
 import nl.tue.geometrycore.geometry.linear.Line;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
+import nl.tue.geometrycore.geometry.linear.PolyLine;
+import nl.tue.geometrycore.geometry.linear.Polygon;
 
 public class Util {
 
@@ -11,5 +13,9 @@ public class Util {
 
     public static Line extendLine(LineSegment segment) {
         return Line.byThroughpoints(segment.getStart(), segment.getEnd());
+    }
+
+    public static Polygon finishPolyLine(PolyLine line) {
+        return new Polygon(line.vertices());
     }
 }

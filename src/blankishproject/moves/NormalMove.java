@@ -192,7 +192,8 @@ public abstract class NormalMove extends Move {
         } else if (previousIntersection.get(0) instanceof Vector) {
             contraction.setStart((Vector) previousIntersection.get(0).clone());
         } else {
-            System.out.println("Unexpected Geometry found for Contraction-Previous intersection");
+            System.out.println("Unexpected Geometry found for Contraction-Previous intersection: ");
+            System.out.println(previousIntersection);
             return null;
         }
 
@@ -205,6 +206,7 @@ public abstract class NormalMove extends Move {
             contraction.setEnd((Vector) nextIntersection.get(0).clone());
         } else {
             System.out.println("Unexpected Geometry found for Contraction-Next intersection");
+            System.out.println(nextIntersection);
             return null;
         }
 

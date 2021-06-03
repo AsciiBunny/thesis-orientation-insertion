@@ -126,6 +126,7 @@ public class SidePanel extends TabbedSidePanel {
 
         tab.addButton("Run Algorithm [r]", (e -> data.runSchematizationAlgorithm()));
         tab.addButton("Finish Algorithm [f]", (e -> data.finishSchematizationAlgorithm()));
+        tab.addButton("Use As Input", (e -> data.setAsInputSimplificationAlgorithm()));
     }
 
     private void addSchematizationDebugDrawOptionsSection(SideTab tab) {

@@ -151,8 +151,10 @@ public class Simplification {
 
     public static void drawDebug(Data data, DrawPanel panel) {
         if (data.simplification == null) return;
-        var polygon = data.simplification;
-        var configurationList = new ConfigurationList(polygon);
+
+        ConfigurationList configurationList = null;
+        if (data.drawConvexityArcs || data.drawConvexityEdges || data.drawPositiveContractions || data.drawNegativeContractions || data.drawBlockingPoints)
+            configurationList = new ConfigurationList(data.simplification);
 
         if (data.drawConvexityArcs)
             drawDebugConvexityArcs(panel, configurationList, Color.red, Color.green);
