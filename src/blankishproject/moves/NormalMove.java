@@ -85,7 +85,7 @@ public abstract class NormalMove extends Move {
 
     public double getAreaForDistance(double moveDistance) {
         if (moveDistance < 0 || moveDistance > getDistance() + DoubleUtil.EPS)
-            throw new IllegalArgumentException("moveDistance out of possible move bounds [0, " + getDistance() +"]: " + moveDistance);
+            throw new IllegalArgumentException("moveDistance out of possible move bounds [0, " + getDistance() + "]: " + moveDistance);
 
         if (DoubleUtil.close(moveDistance, distance))
             return getArea();
@@ -105,7 +105,7 @@ public abstract class NormalMove extends Move {
         if (DoubleUtil.close(removeArea, getArea()))
             return contraction;
         if (removeArea > getArea() || removeArea < 0)
-            throw new IllegalArgumentException("removeArea out of possible move bounds [0, " + getArea() +"]: " + removeArea);
+            throw new IllegalArgumentException("removeArea out of possible move bounds [0, " + getArea() + "]: " + removeArea);
 
         var inner = configuration.inner;
         var innerLength = inner.length();
@@ -184,8 +184,12 @@ public abstract class NormalMove extends Move {
         var previousIntersection = contractionLine.intersect(previousTrack);
         var nextIntersection = contractionLine.intersect(nextTrack);
 
+        if (DoubleUtil.close(contraction.length(), 0))
+            System.out.println("contraction = " + contraction + "[" + contraction.length() + "]");
+
         if (previousIntersection.size() == 0) {
-            System.out.println("Unexpected Geometry found for Contraction-Previous intersection");
+            System.out.println("Unexpected Geometry found for Contraction-Previous intersection:");
+            System.out.println("[No intersection found]");
             return null;
         } else if (previousIntersection.get(0) instanceof Line) {
             contraction.setStart(configuration.previous.getStart().clone());
@@ -198,21 +202,50 @@ public abstract class NormalMove extends Move {
         }
 
         if (nextIntersection.size() == 0) {
-            System.out.println("Unexpected Geometry found for Contraction-Next intersection ");
+            System.out.println("Unexpected Geometry found for Contraction-Next intersection:");
+            System.out.println("[No intersection found]");
             return null;
         } else if (nextIntersection.get(0) instanceof Line) {
             contraction.setEnd(configuration.next.getEnd().clone());
         } else if (nextIntersection.get(0) instanceof Vector) {
             contraction.setEnd((Vector) nextIntersection.get(0).clone());
         } else {
-            System.out.println("Unexpected Geometry found for Contraction-Next intersection");
+            System.out.println("Unexpected Geometry found for Contraction-Next intersection:");
             System.out.println(nextIntersection);
             return null;
         }
 
-        // TODO: if previous and next meet in point, they could cross, need to make sure contraction and inner have same direction
+//        if (DoubleUtil.close(contraction.length(), 0))
+//            return contraction;
 
-        return contraction.getDirection().isApproximately(configuration.inner.getDirection()) ? contraction : null;
+        // Determine if edge case where previous and next cross
+        var previousNextIntersection = previousTrack.intersect(nextTrack);
+        if (previousNextIntersection.size() == 0)
+            return contraction;
+
+
+        if (!(previousNextIntersection.get(0) instanceof Vector)) {
+            System.out.println("Unexpected Geometry found for Previous-Next intersection:");
+            System.out.println(previousNextIntersection);
+            return null;
+        }
+
+        var intersection = (Vector) previousNextIntersection.get(0);
+        var closest = extendLine(configuration.inner).closestPoint(intersection);
+        var intersectionDirection = Vector.subtract(intersection, closest);
+        var intersectionDistance = intersectionDirection.length();
+        intersectionDirection.normalize();
+        var normalizedNormal = normal.clone();
+        normalizedNormal.normalize();
+        if (intersectionDirection.isApproximately(normalizedNormal) && (intersectionDistance < distance || DoubleUtil.close(intersectionDistance, distance))) {
+            contraction.setStart(intersection.clone());
+            contraction.setEnd(intersection.clone());
+
+            //todo: dirty edit -> move checks to distance calculation to prevent edge case from happening
+            distance = intersectionDistance;
+        }
+
+        return contraction;
     }
 
     /**

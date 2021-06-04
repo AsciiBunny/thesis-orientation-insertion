@@ -52,11 +52,6 @@ public class PairNormalMove extends Move {
 
     @Override
     public void apply() {
-        assert move.isValid();
-        assert pairedMove.isValid();
-        assert configuration.getMove(move.getType()).isValid();
-        assert pairedConfiguration.getMove(pairedMove.getType()).isValid();
-
         var removed = configuration.performMove(move.getType(), area, true);
 
         removed.forEach(i -> {
@@ -64,21 +59,28 @@ public class PairNormalMove extends Move {
                 pairedConfiguration.index--;
             }
         });
-        // TODO: Might cause issues as cleanup results are not returned
+        // TODO: Causes issues as cleanup results are not returned
         pairedConfiguration.performMove(pairedMove.getType(), area, true);
+        // Possible solution: undo index adjustments after second move, returns remove combined results
+        // Move cleanup code into Move class?
     }
 
     private void calculateValidity() {
+        // The two configurations should share an edge
         var sharedEdge = undirectedEquals(configuration.next, pairedConfiguration.previous);
+
+        // The shared edge cannot be completely convex or reflex
         var validReflexity = (configuration.isEndReflex() && pairedConfiguration.isStartConvex())
                 || (configuration.isEndConvex() && pairedConfiguration.isStartReflex());
+
+        // The affected areas should be free of blocking points
         // TODO: calculate blocking numbers for expected areas
         var noBlocking = true;
 
+        // If all these cases hold, this PairNormalMove is likely to be valid
         isValid = sharedEdge && validReflexity && noBlocking;
     }
 
-    // Todo: Calculate area instead? Can do moves for area in NormalMove
     private void calculateArea() {
         // Collect needed variables
         final var sharedLength = configuration.next.length();
@@ -119,13 +121,16 @@ public class PairNormalMove extends Move {
 
         // If found distance larger than move would allow, adjust target area down
         if (distance * angle1 < move.distance - DoubleUtil.EPS) {
+            // Normal case
             this.area = move.getAreaForDistance(distance * angle1);
         } else {
+            // Edge-case
             this.area = move.getArea();
         }
 
         // If determined target area is larger then paired move would allow, adjust down too
         if (this.area > Math.abs(pairedMove.getArea() + DoubleUtil.EPS)) {
+            // same Edge-case but for pairedmove
             this.area = pairedMove.getArea();
         }
 
