@@ -41,7 +41,7 @@ public class Simplification {
     }
 
     public static void run(Data data) {
-        iteration(data, data.simplification);
+        timedIteration(data, data.simplification);
     }
 
     public static void finish(Data data) {

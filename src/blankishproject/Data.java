@@ -160,7 +160,6 @@ public class Data {
     }
 
     public void repaint() {
-        TestCode.run(this);
         draw.repaint();
         side.repaint();
     }

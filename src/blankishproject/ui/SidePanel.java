@@ -13,6 +13,7 @@
  */
 package blankishproject.ui;
 
+import blankishproject.Schematization;
 import blankishproject.Simplification;
 import blankishproject.Data;
 import blankishproject.deciders.IDecider;
@@ -31,6 +32,10 @@ public class SidePanel extends TabbedSidePanel {
     static final Font subTitleFont = new Font(null, Font.BOLD, 14);
 
     private final Data data;
+
+    private ChangeLabel schematizationVertexCountLabel;
+    private ChangeLabel schematizationEdgeCountLabel;
+    private ChangeLabel schematizationAreaLabel;
 
     private ChangeLabel vertexCountLabel;
     private ChangeLabel edgeCountLabel;
@@ -61,7 +66,7 @@ public class SidePanel extends TabbedSidePanel {
 
         addGeometryOptionsSection(tab);
         tab.addSpace(5);
-        addGeometryInformationSection(tab);
+        addSchematizationGeometryInformationSection(tab);
         tab.addSpace(5);
         addSchematizationRunningSection(tab);
         tab.addSpace(5);
@@ -119,6 +124,18 @@ public class SidePanel extends TabbedSidePanel {
     //endregion Geometry
 
     //region Schematization
+
+    private void addSchematizationGeometryInformationSection(SideTab tab) {
+        tab.addLabel("Geometry Information").setFont(titleFont);
+        tab.addSeparator(0);
+
+        schematizationVertexCountLabel = new ChangeLabel("Vertices", 0);
+        tab.addComponent(schematizationVertexCountLabel);
+        schematizationEdgeCountLabel = new ChangeLabel("Edges", 0);
+        tab.addComponent(schematizationEdgeCountLabel);
+        schematizationAreaLabel = new ChangeLabel("Area", 0);
+        tab.addComponent(schematizationAreaLabel);
+    }
 
     private void addSchematizationRunningSection(SideTab tab) {
         tab.addLabel("Algorithm Running").setFont(titleFont);
@@ -263,6 +280,14 @@ public class SidePanel extends TabbedSidePanel {
         vertexCountLabel.setNewValue(polygon != null ? polygon.vertexCount() : 0);
         edgeCountLabel.setNewValue(polygon != null ? polygon.edgeCount() : 0);
         areaLabel.setNewValue(polygon != null ? polygon.areaUnsigned() : 0);
+
+        if (data.schematization != null) {
+            var original = data.original;
+            var polyline = data.schematization;
+            schematizationVertexCountLabel.setNewValue(original.vertexCount() + polyline.vertexCount() - data.currentIndex);
+            schematizationEdgeCountLabel.setNewValue(original.edgeCount() + polyline.edgeCount() - data.currentIndex);
+            schematizationAreaLabel.setNewValue(original.areaUnsigned());
+        }
     }
 
     public void repaintAlgorithmInformation() {
