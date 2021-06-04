@@ -189,9 +189,7 @@ public class SidePanel extends TabbedSidePanel {
             this.repaint();
         }));
 
-        tab.addButton("Debug draw", (e -> {
-            data.draw.repaint();
-        }));
+        tab.addButton("Debug draw", (e -> data.draw.repaint()));
     }
 
     private void addSimplificationOptionsSection(SideTab tab) {
@@ -199,9 +197,7 @@ public class SidePanel extends TabbedSidePanel {
         tab.addSeparator(0);
 
         var keySet = IDecider.deciders.keySet().stream().sorted().toArray(String[]::new);
-        tab.addComboBox(keySet, data.deciderType, (e, v) -> {
-            data.deciderType = v;
-        });
+        tab.addComboBox(keySet, data.deciderType, (e, v) -> data.deciderType = v);
     }
 
 
@@ -279,7 +275,7 @@ public class SidePanel extends TabbedSidePanel {
 
         vertexCountLabel.setNewValue(polygon != null ? polygon.vertexCount() : 0);
         edgeCountLabel.setNewValue(polygon != null ? polygon.edgeCount() : 0);
-        areaLabel.setNewValue(polygon != null ? polygon.areaUnsigned() : 0);
+        areaLabel.setNewValue(polygon != null && polygon.vertexCount() > 2 ? polygon.areaUnsigned() : 0);
 
         if (data.schematization != null) {
             var original = data.original;
