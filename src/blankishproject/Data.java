@@ -46,6 +46,8 @@ public class Data {
     // Debug geometry
     public Map<Color, GeometryList<LineSegment>> debugLines = new HashMap<>();
     public Map<Color, GeometryList<LineSegment>> debugArrows = new HashMap<>();
+    public List<Polygon> innerDifference;
+    public List<Polygon> outerDifference;
 
     public boolean copyMode = false;
 
@@ -59,6 +61,9 @@ public class Data {
     public boolean drawPositiveContractions = false;
     public boolean drawNegativeContractions = false;
     public boolean drawBlockingPoints = false;
+
+    public boolean drawInnerDifference = false;
+    public boolean drawOuterDifference = false;
 
     // keep these last
     public DrawPanel draw;

@@ -1,9 +1,16 @@
 package blankishproject;
 
+import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Line;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.PolyLine;
 import nl.tue.geometrycore.geometry.linear.Polygon;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Util {
 
@@ -17,5 +24,48 @@ public class Util {
 
     public static Polygon finishPolyLine(PolyLine line) {
         return new Polygon(line.vertices());
+    }
+
+
+    public static List<Polygon> calculateSymmetricDifference(Polygon a, Polygon b) {
+        Geometry faceA = polygonToGeometry(a);
+        Geometry faceB = polygonToGeometry(b);
+
+        var intersection = faceA.difference(faceB);
+        var symDifference = intersection.getArea();
+        System.out.println("symDifference = " + symDifference);
+        var difference = new ArrayList<Polygon>();
+        for (int i = 0; i < intersection.getNumGeometries(); i++) {
+            difference.add(geometryToPolygon(intersection.getGeometryN(i)));
+        }
+
+        return difference;
+    }
+
+    private static final GeometryFactory geofac = new GeometryFactory();
+    public static Geometry polygonToGeometry(Polygon polygon) {
+        var coordinates = new ArrayList<Coordinate>(polygon.vertices().size() + 1);
+        Vector first = null;
+        for (int i = 0; i < polygon.vertices().size(); i++) {
+            var v = polygon.vertices().get(i);
+            coordinates.add(new Coordinate(v.getX(), v.getY()));
+            if (first == null) {
+                first = v;
+            }
+        }
+        coordinates.add(new Coordinate(first.getX(), first.getY()));
+//        return geofac.createLinearRing(coordinates.toArray(new Coordinate[]{}));
+        return geofac.createPolygon(coordinates.toArray(new Coordinate[]{}));
+    }
+
+    public static Polygon geometryToPolygon(Geometry geometry) {
+        System.out.println("geometry = " + geometry);
+        System.out.println("geometry = " + geometry.getArea());
+        var polygon = new Polygon();
+        var coordinates = geometry.getCoordinates();
+        for (var coordinate: coordinates) {
+            polygon.addVertex(new Vector(coordinate.x, coordinate.y));
+        }
+        return polygon;
     }
 }

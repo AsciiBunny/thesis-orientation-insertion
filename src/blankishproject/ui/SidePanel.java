@@ -257,6 +257,16 @@ public class SidePanel extends TabbedSidePanel {
             data.drawBlockingPoints = b;
             data.draw.repaint();
         });
+
+        tab.addCheckbox("Draw Inner Difference", data.drawInnerDifference, (e, b) -> {
+            data.drawInnerDifference = b;
+            data.draw.repaint();
+        });
+
+        tab.addCheckbox("Draw Outer Difference", data.drawOuterDifference, (e, b) -> {
+            data.drawOuterDifference = b;
+            data.draw.repaint();
+        });
     }
 
     //endregion Simplification

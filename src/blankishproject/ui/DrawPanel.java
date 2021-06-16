@@ -28,7 +28,6 @@ import java.awt.event.MouseEvent;
 import java.util.Arrays;
 
 /**
- *
  * @author Wouter Meulemans (w.meulemans@tue.nl)
  */
 public class DrawPanel extends GeometryPanel {
@@ -70,6 +69,17 @@ public class DrawPanel extends GeometryPanel {
             //setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 100);
             draw(data.debugArrows.get(color));
         }
+
+        if (data.drawInnerDifference && data.innerDifference != null) {
+            setStroke(Color.pink, data.strokewidth, Dashing.SOLID);
+            draw(data.innerDifference);
+        }
+
+        if (data.drawOuterDifference && data.outerDifference != null) {
+            setStroke(Color.pink, data.strokewidth, Dashing.SOLID);
+            draw(data.outerDifference);
+        }
+
 
         Schematization.drawDebug(data, this);
         Simplification.drawDebug(data, this);

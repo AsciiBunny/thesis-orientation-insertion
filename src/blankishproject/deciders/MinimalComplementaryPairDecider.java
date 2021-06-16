@@ -71,14 +71,18 @@ public class MinimalComplementaryPairDecider implements IDecider {
 
             if (configuration.hasMove(MoveType.POSITIVE_PAIR)) {
                 var move = configuration.getMove(MoveType.POSITIVE_PAIR);
-                if (move.getAffectedArea() < bestArea)
+                if (move.getAffectedArea() < bestArea) {
                     best = Collections.singletonList(new Decision(configuration, MoveType.POSITIVE_PAIR, move.getAffectedArea(), false));
+                    bestArea = move.getAffectedArea();
+                }
             }
 
             if (configuration.hasMove(MoveType.NEGATIVE_PAIR)) {
                 var move = configuration.getMove(MoveType.NEGATIVE_PAIR);
-                if (move.getAffectedArea() < bestArea)
+                if (move.getAffectedArea() < bestArea) {
                     best = Collections.singletonList(new Decision(configuration, MoveType.NEGATIVE_PAIR, move.getAffectedArea(), false));
+                    bestArea = move.getAffectedArea();
+                }
             }
 
         }

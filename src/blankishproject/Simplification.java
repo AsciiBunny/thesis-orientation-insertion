@@ -1,10 +1,7 @@
 package blankishproject;
 
-import blankishproject.deciders.Decision;
 import blankishproject.deciders.IDecider;
 import blankishproject.edgelist.ConfigurationList;
-import blankishproject.moves.MoveType;
-import blankishproject.moves.NormalMove;
 import blankishproject.moves.PairNormalMove;
 import blankishproject.ui.DrawPanel;
 import nl.tue.geometrycore.geometry.curved.CircularArc;
@@ -16,8 +13,6 @@ import nl.tue.geometrycore.geometryrendering.styling.TextAnchor;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class Simplification {
 
@@ -116,6 +111,10 @@ public class Simplification {
         resetDebug(data);
         data.debugLines.put(Color.blue, debugLines);
         data.debugArrows.put(Color.blue, debugArrows);
+        data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
+        data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
+
+
 
         return madeChanges;
     }

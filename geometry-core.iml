@@ -8,5 +8,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="GeometryCore" level="project" />
+    <orderEntry type="library" name="jts-core-1.18.1" level="project" />
+    <orderEntry type="library" name="jts-io-common-1.18.1" level="project" />
   </component>
 </module>
