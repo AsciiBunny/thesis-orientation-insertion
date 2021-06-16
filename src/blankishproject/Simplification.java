@@ -111,10 +111,9 @@ public class Simplification {
         resetDebug(data);
         data.debugLines.put(Color.blue, debugLines);
         data.debugArrows.put(Color.blue, debugArrows);
+
         data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
         data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
-
-
 
         return madeChanges;
     }

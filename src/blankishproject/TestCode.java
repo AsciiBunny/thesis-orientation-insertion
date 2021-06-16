@@ -9,12 +9,65 @@ import nl.tue.geometrycore.geometryrendering.styling.Dashing;
 import nl.tue.geometrycore.util.DoubleUtil;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestCode {
 
     public static void run(Data data) {
+        Vector start = new Vector(100,200);
+        Vector end = new Vector(200,100);
+        Vector corner = new Vector(100,100);
 
+        Vector assigned = new Vector(0,1);
+        Vector associated = new Vector(1,0);
+
+
+        var points = buildStaircase(start, end, assigned, associated, 10);
+
+        points.add(corner);
+
+        var polygon = new Polygon(points);
+
+
+        // Use as input
+        data.original = polygon.clone();
+        data.simplification = data.original.clone();
+
+        Schematization.init(data);
     }
+
+    public static List<Vector> buildStaircase(Vector start, Vector end, Vector assigned, Vector associated, int steps) {
+        var points = new ArrayList<Vector>();
+
+        var direction = Vector.subtract(end, start);
+
+        var stepSize = direction.length() / (steps * 2);
+        var step = direction.clone();
+        step.normalize();
+
+
+        var ratios = Vector.solveVectorAddition(assigned, associated, step);
+        var assignedStep = Vector.multiply(stepSize * ratios[0], assigned);
+        var associatedStep = Vector.multiply(stepSize * ratios[1], associated);
+
+
+        var now = start.clone();
+        for (int i = 0; i < steps; i++) {
+            buildStep(points, now, assignedStep, associatedStep);
+            buildStep(points, now, associatedStep, assignedStep);
+        }
+        points.add(now);
+
+        return points;
+    }
+
+    public static void buildStep(List<Vector> points, Vector now, Vector a, Vector b) {
+        now.translate(a);
+        points.add(now.clone());
+        now.translate(b);
+    }
+
 
 //    public static void trapezoidTest(Data data) {
 //        var polygon = ((Polygon) data.geometries.get(0));

@@ -161,6 +161,7 @@ public class Data {
     }
 
     public void runTestCode() {
+        TestCode.run(this);
         repaint();
     }
 
