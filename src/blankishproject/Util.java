@@ -32,8 +32,6 @@ public class Util {
         Geometry faceB = polygonToGeometry(b);
 
         var intersection = faceA.difference(faceB);
-        var symDifference = intersection.getArea();
-        System.out.println("symDifference = " + symDifference);
         var difference = new ArrayList<Polygon>();
         for (int i = 0; i < intersection.getNumGeometries(); i++) {
             difference.add(geometryToPolygon(intersection.getGeometryN(i)));
@@ -54,13 +52,10 @@ public class Util {
             }
         }
         coordinates.add(new Coordinate(first.getX(), first.getY()));
-//        return geofac.createLinearRing(coordinates.toArray(new Coordinate[]{}));
         return geofac.createPolygon(coordinates.toArray(new Coordinate[]{}));
     }
 
     public static Polygon geometryToPolygon(Geometry geometry) {
-        System.out.println("geometry = " + geometry);
-        System.out.println("geometry = " + geometry.getArea());
         var polygon = new Polygon();
         var coordinates = geometry.getCoordinates();
         for (var coordinate: coordinates) {
