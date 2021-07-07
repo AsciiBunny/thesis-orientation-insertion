@@ -29,12 +29,35 @@ public class TestCode {
 
         var polygon = new Polygon(points);
 
+        var a = polygon.vertex(0);
+        var b = polygon.vertex(1);
+        var c = polygon.vertex(2);
+        var d = polygon.vertex(3);
+
+        var prev = new LineSegment(a, b).clone();
+        var inner = new LineSegment(b, c).clone();
+        var next = new LineSegment(c, d).clone();
+
+        var prevLine = Util.extendLine(prev);
+        var nextLine = Util.extendLine(next);
+
+        var m = Vector.add(b, c);
+        m.scale(0.5);
+        inner.rotate(1, m);
+
+        var innerLine = Util.extendLine(inner);
+        var newB = (Vector) innerLine.intersect(prevLine).get(0);
+        var newC = (Vector) innerLine.intersect(nextLine).get(0);
+
+        b.set(newB);
+        c.set(newC);
 
         // Use as input
         data.original = polygon.clone();
-        data.simplification = data.original.clone();
 
+        Simplification.init(data);
         Schematization.init(data);
+
     }
 
     public static List<Vector> buildStaircase(Vector start, Vector end, Vector assigned, Vector associated, int steps) {

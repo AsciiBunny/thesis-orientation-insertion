@@ -1,5 +1,7 @@
 package blankishproject.moves;
 
+import blankishproject.Simplification;
+import blankishproject.deciders.Decision;
 import blankishproject.edgelist.Configuration;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Polygon;
@@ -52,17 +54,12 @@ public class PairNormalMove extends Move {
 
     @Override
     public void apply() {
-        var removed = configuration.performMove(move.getType(), area, true);
+        var decision = new Decision(configuration, move.getType(), area, true);
+        Simplification.applyMove(configuration.data, decision);
 
-        removed.forEach(i -> {
-            if (i < pairedConfiguration.index) {
-                pairedConfiguration.index--;
-            }
-        });
-        // TODO: Causes issues as cleanup results are not returned
-        pairedConfiguration.performMove(pairedMove.getType(), area, true);
-        // Possible solution: undo index adjustments after second move, returns remove combined results
-        // Move cleanup code into Move class?
+        var pairedDecision = new Decision(pairedConfiguration, pairedMove.getType(), area, true);
+        Simplification.applyMove(configuration.data, pairedDecision);
+
     }
 
     private void calculateValidity() {

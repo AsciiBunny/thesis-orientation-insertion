@@ -1,5 +1,6 @@
 package blankishproject.edgelist;
 
+import blankishproject.Data;
 import blankishproject.Util;
 import blankishproject.moves.*;
 import nl.tue.geometrycore.geometry.Vector;
@@ -16,23 +17,33 @@ import static blankishproject.Util.undirectedEquals;
 
 public class Configuration {
 
+    public final Data data;
     private final Polygon polygon;
     public int index;
-    public final LineSegment previous;
-    public final LineSegment inner;
-    public final LineSegment next;
+    public LineSegment previous;
+    public LineSegment inner;
+    public LineSegment next;
 
-    public final PositiveNormalMove positiveNormalMove;
-    public final NegativeNormalMove negativeNormalMove;
+    public PositiveNormalMove positiveNormalMove;
+    public NegativeNormalMove negativeNormalMove;
     public PairNormalMove positivePairMove;
     public PairNormalMove negativePairMove;
 
-    public Configuration(Polygon polygon, int index, LineSegment previous, LineSegment inner, LineSegment next) {
-        this.polygon = polygon;
+    public Configuration(Data data, int index) {
+        this.data = data;
+        this.polygon = data.simplification;
         this.index = index;
-        this.previous = previous;
-        this.inner = inner;
-        this.next = next;
+
+        init();
+    }
+
+    public void init() {
+        var edges = new ArrayList<LineSegment>();
+        polygon.edges().forEach(edges::add);
+
+        this.previous = edges.get((index + edges.size() - 1) % edges.size());
+        this.inner = edges.get(index % edges.size());
+        this.next = edges.get((index + 1) % edges.size());
 
         this.positiveNormalMove = new PositiveNormalMove(this, polygon);
         this.negativeNormalMove = new NegativeNormalMove(this, polygon);
@@ -77,6 +88,7 @@ public class Configuration {
     private List<Integer> moveCleanup() {
         assert index == polygon.vertices().indexOf(inner.getStart()) : "Index (" + index + ") is inaccurate (should be " + polygon.vertices().indexOf(inner.getStart()) + "), likely not updated correctly after performing previous contraction";
 
+        var invalid = false;
         // Cleanup
         var removed = new ArrayList<Integer>();
         // Previous got shortened into non-existence
@@ -89,6 +101,8 @@ public class Configuration {
             if (removeIndex < index) {
                 index -= 1;
             }
+
+            // todo pas neighbour aan
         }
 
         // Next got shortened into non-existence
@@ -101,7 +115,6 @@ public class Configuration {
             if (removeIndex < index) {
                 index -= 1;
             }
-
         }
 
         assert index == polygon.vertices().indexOf(inner.getStart()) : "Index (" + index + ") was updated incorrectly (should be " + polygon.vertices().indexOf(inner.getStart()) + ") after removing vertices";
@@ -113,8 +126,8 @@ public class Configuration {
             assert polygon.vertex(removeIndex) == inner.getStart();
             polygon.removeVertex(removeIndex);
             removed.add(removeIndex);
-
             index -= 1;
+            invalid = true;
         }
 
         // Next got shortened into non-existence and inner is now an extension of next's next
@@ -123,7 +136,11 @@ public class Configuration {
             var removeIndex = (index + 1) % polygon.vertexCount();
             assert polygon.vertex(removeIndex) == inner.getEnd();
             polygon.removeVertex(removeIndex);
+
             removed.add(removeIndex);
+            if (removeIndex < index) {
+                index -= 1;
+            }
         }
 
         // Inner got shortened into non-existence
@@ -132,7 +149,12 @@ public class Configuration {
             assert (polygon.vertex(removeIndex).isApproximately(inner.getStart()));
             polygon.removeVertex(removeIndex);
             removed.add(removeIndex);
+            invalid = true;
         }
+        if (invalid)
+            index = -1;
+
+        assert index == polygon.vertices().indexOf(inner.getStart()) : "Index (" + index + ") is inaccurate (should be " + polygon.vertices().indexOf(inner.getStart()) + "), likely not updated correctly after performing previous contraction";
 
         return removed;
     }

@@ -1,6 +1,8 @@
 package blankishproject;
 
+import blankishproject.deciders.Decision;
 import blankishproject.deciders.IDecider;
+import blankishproject.edgelist.Configuration;
 import blankishproject.edgelist.ConfigurationList;
 import blankishproject.moves.PairNormalMove;
 import blankishproject.ui.DrawPanel;
@@ -10,8 +12,9 @@ import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.geometryrendering.glyphs.ArrowStyle;
 import nl.tue.geometrycore.geometryrendering.styling.Dashing;
 import nl.tue.geometrycore.geometryrendering.styling.TextAnchor;
+import nl.tue.geometrycore.util.DoubleUtil;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 
 public class Simplification {
@@ -35,8 +38,16 @@ public class Simplification {
         totalTimeTaken = lastCycleTimeTaken = 0;
     }
 
+    public static void init(Data data) {
+        data.simplification = data.original.clone();
+        generateConfigurations(data);
+    }
+
     public static void run(Data data) {
         timedIteration(data, data.simplification);
+
+        data.innerDifference = Util.calculateSymmetricDifference(data.simplification, data.original);
+        data.outerDifference = Util.calculateSymmetricDifference(data.original, data.simplification);
     }
 
     public static void finish(Data data) {
@@ -48,14 +59,17 @@ public class Simplification {
 
             var after = polygon.vertexCount();
             if (before != after)
-                System.out.println("Removed " + (before - after) + " vertices, continuing");
+                System.out.println("Removed " + (before - after) + " vertices out of " + after);
             else
-                System.out.println("Removed 0 vertices, stopping");
+                System.out.println("Removed 0 vertices");
 
             before = after;
 
             if (done) break;
         }
+
+        data.innerDifference = Util.calculateSymmetricDifference(data.simplification, data.original);
+        data.outerDifference = Util.calculateSymmetricDifference(data.original, data.simplification);
     }
 
     public static boolean timedIteration(Data data, Polygon polygon) {
@@ -69,16 +83,18 @@ public class Simplification {
     }
 
     public static boolean iteration(Data data, Polygon polygon) {
-        var configurationList = generateConfigurations(polygon);
+        var configurations = data.configurations;
 
-        var debugLines = new GeometryList<LineSegment>();
-        var debugArrows = new GeometryList<LineSegment>();
-
+        // Reset debug lines
+        resetDebug(data);
+        data.debugLines.put(Color.blue, new GeometryList<>());
+        data.debugArrows.put(Color.blue, new GeometryList<>());
 
         // Find moves
-        var moves = new ArrayList<>(IDecider.deciders.get(data.deciderType).findMoves(polygon, configurationList));
+        var moves = new ArrayList<>(IDecider.deciders.get(data.deciderType).findMoves(polygon, configurations));
         var madeChanges = moves.size() > 0;
 
+        // Reset Debug values
         totalMovesMade += moves.size();
         lastCycleMovesMade = moves.size();
         lastCycleAreaEffected = 0;
@@ -86,34 +102,13 @@ public class Simplification {
 
         // Apply found moves
         while (moves.size() > 0) {
-            var min = moves.remove(0);
-            var configuration = min.configuration;
-
-            totalAreaEffected += min.removeArea;
-            lastCycleAreaEffected += min.removeArea;
-
-            debugArrows.add(configuration.inner.clone());
-            var removed = configuration.performMove(min.type, min.removeArea, min.requiresCleanup);
-
-            totalVerticesRemoved += removed.size();
-            lastCycleVerticesRemoved += removed.size();
-
-            moves.forEach(c -> {
-                removed.forEach(i -> {
-                    if (i < c.configuration.index) {
-                        c.configuration.index--;
-                    }
-                });
-            });
-            debugLines.add(configuration.inner.clone());
+            var move = moves.remove(0);
+            applyMove(data, move);
         }
 
-        resetDebug(data);
-        data.debugLines.put(Color.blue, debugLines);
-        data.debugArrows.put(Color.blue, debugArrows);
 
-        data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
-        data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
+        //data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
+        //data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
 
 //        var inner = data.innerDifference.stream().mapToDouble(Polygon::areaUnsigned).sum();
 //        var outer = data.outerDifference.stream().mapToDouble(Polygon::areaUnsigned).sum();
@@ -123,26 +118,99 @@ public class Simplification {
         return madeChanges;
     }
 
-    public static ConfigurationList generateConfigurations(Polygon polygon) {
-        var configurations = new ConfigurationList(polygon);
+    public static void applyMove(Data data, Decision move) {
+        var configuration = move.configuration;
 
-        for (int i = 0; i < configurations.size(); i++) {
-            var a = configurations.get((i - 2 + configurations.size()) % configurations.size());
-            var b = configurations.get(i);
+        totalAreaEffected += move.removeArea;
+        lastCycleAreaEffected += move.removeArea;
 
-            if (!a.isSpecialPairNeighbouring(b))
-                continue;
+        data.debugArrows.get(Color.blue).add(configuration.inner.clone());
 
-            if (a.positiveNormalMove.hasValidContraction() && b.negativeNormalMove.hasValidContraction()) {
-                a.positivePairMove = new PairNormalMove(a, b, a.positiveNormalMove, b.negativeNormalMove, polygon);
-            }
+        var configurationIndex = configuration.index;
+        var removed = configuration.performMove(move.type, move.removeArea, move.requiresCleanup);
 
-            if (a.negativeNormalMove.hasValidContraction() && b.positiveNormalMove.hasValidContraction()) {
-                a.negativePairMove = new PairNormalMove(a, b, a.negativeNormalMove, b.positiveNormalMove, polygon);
-            }
+        data.debugLines.get(Color.blue).add(configuration.inner.clone());
+
+        totalVerticesRemoved += removed.size();
+        lastCycleVerticesRemoved += removed.size();
+
+        data.configurations.forEach(c -> {
+            removed.forEach(i -> {
+                if (i <= c.index && c != configuration) {
+                    c.index--;
+                }
+            });
+        });
+
+        // Collected affected configurations around moved edge
+        var affectedConfigurations = new ArrayList<Configuration>(5);
+        for (var i = configurationIndex - 2; i <= configurationIndex + 2; i++) {
+            var index = (i + data.configurations.size()) % data.configurations.size();
+            affectedConfigurations.add(data.configurations.get(index));
         }
 
-        return configurations;
+        // Reset all configurations in affected area
+        // TODO: minmax doesnt work when overlapping list end-start
+        var firstIndex = -1;
+        var lastIndex = -1;
+        for (var affected : affectedConfigurations) {
+            if (affected.index == -1 || DoubleUtil.close(affected.inner.length(), 0)) {
+                data.configurations.remove(affected);
+                continue;
+            }
+
+            affected.init();
+
+            if (firstIndex == -1) firstIndex = affected.index;
+            lastIndex = affected.index;
+        }
+
+        for (int i = 0; i < data.configurations.size(); i++) {
+            var c = data.configurations.get(i);
+
+            assert c.inner.getStart() == data.simplification.vertex(i) : "index for " + i  + " not correct (" + c.index + ")";
+            assert c.index == i: c.index + " != " + i + " for config: " + c;
+        }
+
+        var start = (firstIndex - 2);
+        var end = lastIndex + 2;
+        // 7 & 3 -> 7 & 10
+        if (lastIndex < firstIndex)
+            end += data.configurations.size();
+        for (var i = start; i <= end; i++) {
+            var index = (i + data.configurations.size()) % data.configurations.size();
+            generateSpecialPairs(data, index);
+        }
+
+        //TODO: Blocking numbers
+    }
+
+    public static void generateConfigurations(Data data) {
+        data.configurations = new ConfigurationList(data);
+
+        for (int index = 0; index < data.configurations.size(); index++) {
+            generateSpecialPairs(data, index);
+        }
+    }
+
+    public static void generateSpecialPairs(Data data, int index) {
+        var configurations = data.configurations;
+        var a = configurations.get((index - 2 + configurations.size()) % configurations.size());
+        var b = configurations.get(index);
+
+        a.positivePairMove = null;
+        a.negativePairMove = null;
+
+        if (!a.isSpecialPairNeighbouring(b))
+            return;
+
+        if (a.positiveNormalMove.hasValidContraction() && b.negativeNormalMove.hasValidContraction()) {
+            a.positivePairMove = new PairNormalMove(a, b, a.positiveNormalMove, b.negativeNormalMove, data.simplification);
+        }
+
+        if (a.negativeNormalMove.hasValidContraction() && b.positiveNormalMove.hasValidContraction()) {
+            a.negativePairMove = new PairNormalMove(a, b, a.negativeNormalMove, b.positiveNormalMove, data.simplification);
+        }
     }
 
     //region debug
@@ -155,9 +223,9 @@ public class Simplification {
     public static void drawDebug(Data data, DrawPanel panel) {
         if (data.simplification == null) return;
 
-        ConfigurationList configurationList = null;
-        if (data.drawConvexityArcs || data.drawConvexityEdges || data.drawPositiveContractions || data.drawNegativeContractions || data.drawBlockingPoints)
-            configurationList = new ConfigurationList(data.simplification);
+        ConfigurationList configurationList = data.configurations;
+        if (configurationList == null)
+            return;
 
         if (data.drawConvexityArcs)
             drawDebugConvexityArcs(panel, configurationList, Color.red, Color.green);

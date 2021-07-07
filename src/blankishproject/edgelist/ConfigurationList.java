@@ -1,5 +1,6 @@
 package blankishproject.edgelist;
 
+import blankishproject.Data;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 
@@ -9,18 +10,14 @@ import java.util.List;
 
 public class ConfigurationList implements Iterable<Configuration> {
 
-    public final Polygon polygon;
-    //public final List<LineSegment> edges;
+    public final Data data;
     private final List<Configuration> list;
 
-    public ConfigurationList(Polygon polygon) {
-        this.polygon = polygon;
-        var edges = new ArrayList<LineSegment>();
-        polygon.edges().forEach(edges::add);
-
+    public ConfigurationList(Data data) {
+        this.data = data;
         this.list = new ArrayList<>();
-        for (int index = 0; index < edges.size(); index++) {
-            list.add(new Configuration(polygon, index, edges.get((index + edges.size() - 1) % edges.size()), edges.get(index % edges.size()), edges.get((index + 1) % edges.size())));
+        for (int index = 0; index < data.simplification.vertexCount(); index++) {
+            list.add(new Configuration(data, index));
         }
 
     }
@@ -36,6 +33,10 @@ public class ConfigurationList implements Iterable<Configuration> {
 
     public Configuration get(int index) {
         return list.get(index);
+    }
+
+    public boolean remove(Configuration configuration) {
+        return list.remove(configuration);
     }
 }
 

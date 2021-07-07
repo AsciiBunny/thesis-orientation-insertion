@@ -1,5 +1,6 @@
 package blankishproject;
 
+import blankishproject.edgelist.ConfigurationList;
 import blankishproject.ui.DrawPanel;
 import blankishproject.ui.SidePanel;
 import nl.tue.geometrycore.geometry.BaseGeometry;
@@ -26,8 +27,15 @@ public class Data {
     //public List<BaseGeometry> geometries = new ArrayList<>();
 
     public Polygon original;
+
     public PolyLine schematization;
+    public int[] clockwiseClassifications;
+    public int[] counterClockwiseClassifications;
+    public int[] significance;
+    public int currentIndex;
+
     public Polygon simplification;
+    public ConfigurationList configurations;
 
     // settings
     public SizeMode sizemode = SizeMode.VIEW;
@@ -38,10 +46,7 @@ public class Data {
 
     public OrientationSet orientations = new OrientationSet();
 
-    public int[] clockwiseClassifications;
-    public int[] counterClockwiseClassifications;
-    public int[] significance;
-    public int currentIndex;
+
 
     // Debug geometry
     public Map<Color, GeometryList<LineSegment>> debugLines = new HashMap<>();
@@ -96,9 +101,9 @@ public class Data {
                 //geometries.add(i.toGeometry());
                 if (i.toGeometry() instanceof Polygon) {
                     original = (Polygon) i.toGeometry();
-                    simplification = original.clone();
 
                     Schematization.init(this);
+                    Simplification.init(this);
                 }
             }
 
@@ -145,7 +150,7 @@ public class Data {
 
     public void setAsInputSimplificationAlgorithm() {
         original = Util.finishPolyLine(schematization);
-        simplification = original.clone();
+        Simplification.init(this);
         Schematization.init(this);
         repaint();
     }
