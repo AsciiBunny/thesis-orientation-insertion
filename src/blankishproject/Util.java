@@ -10,6 +10,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Util {
@@ -23,7 +24,8 @@ public class Util {
     }
 
     public static Polygon finishPolyLine(PolyLine line) {
-        return new Polygon(line.vertices());
+        var vertices = new ArrayList<>(line.vertices());
+        return new Polygon(vertices);
     }
 
 

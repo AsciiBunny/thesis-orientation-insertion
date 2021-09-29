@@ -28,12 +28,14 @@ public class Data {
 
     public Polygon original;
 
+    // Schematization
     public PolyLine schematization;
     public int[] clockwiseClassifications;
     public int[] counterClockwiseClassifications;
     public int[] significance;
     public int currentIndex;
 
+    // Simplification
     public Polygon simplification;
     public ConfigurationList configurations;
 
@@ -102,6 +104,9 @@ public class Data {
                 if (i.toGeometry() instanceof Polygon) {
                     original = (Polygon) i.toGeometry();
 
+                    // TODO: Run checks
+                    runChecks();
+
                     Schematization.init(this);
                     Simplification.init(this);
                 }
@@ -150,6 +155,10 @@ public class Data {
 
     public void setAsInputSimplificationAlgorithm() {
         original = Util.finishPolyLine(schematization);
+
+        // TODO: Run checks
+        runChecks();
+
         Simplification.init(this);
         Schematization.init(this);
         repaint();
@@ -163,6 +172,13 @@ public class Data {
     public void finishSchematizationAlgorithm() {
         Schematization.finish(this);
         repaint();
+    }
+
+    public void runChecks() {
+        Checks.correctOrder(this);
+        Checks.uniqueVertices(this);
+        Checks.noUnnecessaryVertices(this);
+        Checks.no360DegreeTurns(this);
     }
 
     public void runTestCode() {

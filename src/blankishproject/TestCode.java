@@ -6,7 +6,6 @@ import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.geometryrendering.glyphs.ArrowStyle;
 import nl.tue.geometrycore.geometryrendering.styling.Dashing;
-import nl.tue.geometrycore.util.DoubleUtil;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -15,12 +14,23 @@ import java.util.List;
 public class TestCode {
 
     public static void run(Data data) {
-        Vector start = new Vector(100,200);
+        // Normal
+//        Vector start = new Vector(100,200);
+//        Vector end = new Vector(200,100);
+//        Vector corner = new Vector(100,100);
+
+        // Wide
+//        Vector start = new Vector(100,200);
+//        Vector end = new Vector(300,100);
+//        Vector corner = new Vector(100,100);
+
+        // Tall
+        Vector start = new Vector(100,300);
         Vector end = new Vector(200,100);
         Vector corner = new Vector(100,100);
 
-        Vector assigned = new Vector(0,1);
-        Vector associated = new Vector(1,0);
+        Vector assigned = new Vector(0.2,1);
+        Vector associated = new Vector(1,0.2);
 
 
         var points = buildStaircase(start, end, assigned, associated, 10);
@@ -29,10 +39,23 @@ public class TestCode {
 
         var polygon = new Polygon(points);
 
-        var a = polygon.vertex(0);
-        var b = polygon.vertex(1);
-        var c = polygon.vertex(2);
-        var d = polygon.vertex(3);
+        var areaBefore = polygon.areaUnsigned();
+        rotateEdgeAroundMiddle(polygon, 2);
+        System.out.println(areaBefore + " -> " + polygon.areaUnsigned());
+
+        // Use as input
+        data.original = polygon.clone();
+
+        Simplification.init(data);
+        Schematization.init(data);
+
+    }
+
+    public static void rotateEdgeAroundMiddle(Polygon polygon, int index) {
+        var a = polygon.vertex(index);
+        var b = polygon.vertex(index + 1);
+        var c = polygon.vertex(index + 2);
+        var d = polygon.vertex(index + 3);
 
         var prev = new LineSegment(a, b).clone();
         var inner = new LineSegment(b, c).clone();
@@ -51,14 +74,26 @@ public class TestCode {
 
         b.set(newB);
         c.set(newC);
-
-        // Use as input
-        data.original = polygon.clone();
-
-        Simplification.init(data);
-        Schematization.init(data);
-
     }
+
+    public static void rotateEdgeAroundFirst(Polygon polygon, int index) {
+        var b = polygon.vertex(index + 1);
+        var c = polygon.vertex(index + 2);
+        var d = polygon.vertex(index + 3);
+
+        var inner = new LineSegment(b, c).clone();
+        var next = new LineSegment(c, d).clone();
+
+        var nextLine = Util.extendLine(next);
+
+        inner.rotate(1, b);
+
+        var innerLine = Util.extendLine(inner);
+        var newC = (Vector) innerLine.intersect(nextLine).get(0);
+
+        c.set(newC);
+    }
+
 
     public static List<Vector> buildStaircase(Vector start, Vector end, Vector assigned, Vector associated, int steps) {
         var points = new ArrayList<Vector>();
