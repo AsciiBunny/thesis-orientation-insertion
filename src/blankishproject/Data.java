@@ -148,6 +148,16 @@ public class Data {
         repaint();
     }
 
+    public void runXCyclesSimplificationAlgorithm(int cycles) {
+        Simplification.run(this, cycles);
+        repaint();
+    }
+
+    public void runUntilKLeftSimplificationAlgorithm(int K) {
+        Simplification.runUntilLeft(this, K);
+        repaint();
+    }
+
     public void finishSimplificationAlgorithm() {
         Simplification.finish(this);
         repaint();

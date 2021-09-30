@@ -43,6 +43,8 @@ public class Simplification {
         generateConfigurations(data);
     }
 
+
+
     public static void run(Data data) {
         timedIteration(data, data.simplification);
 
@@ -50,14 +52,12 @@ public class Simplification {
         data.outerDifference = Util.calculateSymmetricDifference(data.original, data.simplification);
     }
 
-    public static void finish(Data data) {
-        var polygon = data.simplification;
+    public static void run(Data data, int cycles) {
+        var before = data.simplification.vertexCount();
+        for (int cycle = 0; cycle < cycles; cycle++) {
+            var done = !iteration(data, data.simplification);
 
-        var before = polygon.vertexCount();
-        while (true) {
-            var done = !iteration(data, polygon);
-
-            var after = polygon.vertexCount();
+            var after = data.simplification.vertexCount();
             if (before != after)
                 System.out.println("Removed " + (before - after) + " vertices out of " + after);
             else
@@ -70,6 +70,30 @@ public class Simplification {
 
         data.innerDifference = Util.calculateSymmetricDifference(data.simplification, data.original);
         data.outerDifference = Util.calculateSymmetricDifference(data.original, data.simplification);
+    }
+
+    public static void runUntilLeft(Data data, int left) {
+        var before = data.simplification.vertexCount();
+        while (before > left) {
+            var done = !iteration(data, data.simplification);
+
+            var after = data.simplification.vertexCount();
+            if (before != after)
+                System.out.println("Removed " + (before - after) + " vertices out of " + after);
+            else
+                System.out.println("Removed 0 vertices");
+
+            before = after;
+
+            if (done) break;
+        }
+
+        data.innerDifference = Util.calculateSymmetricDifference(data.simplification, data.original);
+        data.outerDifference = Util.calculateSymmetricDifference(data.original, data.simplification);
+    }
+
+    public static void finish(Data data) {
+        runUntilLeft(data, 0);
     }
 
     public static boolean timedIteration(Data data, Polygon polygon) {

@@ -29,6 +29,9 @@ public class SimplificationTab {
     private ChangeLabel totalTimeTakenLabel;
     private ChangeLabel lastCycleTimeTakenLabel;
 
+    private int x = 50;
+    private int k = 100;
+
     public SimplificationTab(Data data, SidePanel panel) {
         this.data = data;
         this.tab = panel.addTab("Simplification");
@@ -63,8 +66,24 @@ public class SimplificationTab {
         tab.addLabel("Algorithm Running").setFont(titleFont);
         tab.addSeparator(0);
 
-        tab.addButton("Run Algorithm [r]", (e -> data.runSimplificationAlgorithm()));
-        tab.addButton("Finish Algorithm [f]", (e -> data.finishSimplificationAlgorithm()));
+        tab.addButton("Run timed cycle [r]", (e -> data.runSimplificationAlgorithm()));
+        tab.addButton("Finish completely [f]", (e -> data.finishSimplificationAlgorithm()));
+
+        tab.addSpace(3);
+
+        var xButton = tab.addButton("Run " + x + " cycles", (e -> data.runXCyclesSimplificationAlgorithm(x)));
+        tab.addIntegerSlider(x, 1, 1000, (changeEvent, integer) -> {
+            x = integer;
+            xButton.setText("Run " + x + " cycles");
+        });
+
+        tab.addSpace(3);
+
+        var kButton = tab.addButton("Run until " + k + " left", (e -> data.runUntilKLeftSimplificationAlgorithm(k)));
+        tab.addIntegerSlider(k, 1, 1000, (changeEvent, integer) -> {
+            k = integer;
+            kButton.setText("Run until " + k + " left");
+        });
 
         tab.addSpace(3);
 
