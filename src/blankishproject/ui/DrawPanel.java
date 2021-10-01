@@ -13,10 +13,7 @@
  */
 package blankishproject.ui;
 
-import blankishproject.Schematization;
-import blankishproject.Simplification;
-import blankishproject.Data;
-import blankishproject.TestCode;
+import blankishproject.*;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Rectangle;
 import nl.tue.geometrycore.geometryrendering.GeometryPanel;
@@ -83,6 +80,7 @@ public class DrawPanel extends GeometryPanel {
 
         Schematization.drawDebug(data, this);
         Simplification.drawDebug(data, this);
+        Compass.draw(data, this);
         TestCode.draw(data, this);
     }
 

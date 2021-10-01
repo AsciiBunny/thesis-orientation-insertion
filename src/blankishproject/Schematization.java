@@ -278,8 +278,6 @@ public class Schematization {
     }
 
     public static void drawDebug(Data data, DrawPanel panel) {
-        drawCompass(panel, data.orientations);
-
         if (data.original == null) return;
 
         if (data.drawOrientations)
@@ -288,20 +286,6 @@ public class Schematization {
             drawClassification(panel, data.original, data.clockwiseClassifications, data.counterClockwiseClassifications, data.orientations);
         if (data.drawSignificance)
             drawSignificance(panel, data.original, data.significance, data.orientations);
-    }
-
-    private static void drawCompass(DrawPanel panel, OrientationSet orientations) {
-        panel.setStroke(Color.darkGray, 3, Dashing.SOLID);
-        panel.setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 2.5);
-
-        var center = panel.convertViewToWorld(new Vector(panel.getWidth() - 75, panel.getHeight() - 75));
-        orientations.forEach(orientation -> {
-            var dir = orientation.getDirection();
-            dir.scale(panel.convertViewToWorld(50));
-            panel.draw(new LineSegment(center, Vector.add(center, dir)));
-        });
-
-        panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
     }
 
     private static void drawOrientations(DrawPanel panel, Polygon original, OrientationSet orientations) {

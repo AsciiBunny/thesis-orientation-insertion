@@ -18,7 +18,7 @@ public class MinimalComplementaryPairDecider implements IDecider {
         var bestSpecialPair = findPairMove(configurations);
         var bestNormalPair = findNormalPair(polygon, configurations);
 
-        System.out.println("bestSpecialPair = " + bestSpecialPair.size());
+        System.out.println("bestSpecialPair.size() = " + bestSpecialPair.size());
         return bestSpecialPair.size() > 0 ? bestSpecialPair : bestNormalPair;
     }
 

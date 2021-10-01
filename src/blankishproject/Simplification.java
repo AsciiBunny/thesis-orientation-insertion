@@ -43,8 +43,6 @@ public class Simplification {
         generateConfigurations(data);
     }
 
-
-
     public static void run(Data data) {
         timedIteration(data, data.simplification);
 
@@ -192,8 +190,8 @@ public class Simplification {
         for (int i = 0; i < data.configurations.size(); i++) {
             var c = data.configurations.get(i);
 
-            assert c.inner.getStart() == data.simplification.vertex(i) : "index for " + i  + " not correct (" + c.index + ")";
-            assert c.index == i: c.index + " != " + i + " for config: " + c;
+            assert c.inner.getStart() == data.simplification.vertex(i) : "index for " + i + " not correct (" + c.index + ")";
+            assert c.index == i : c.index + " != " + i + " for config: " + c;
         }
 
         var start = (firstIndex - 2);
