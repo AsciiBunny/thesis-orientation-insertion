@@ -1,6 +1,6 @@
-package blankishproject.moves;
+package blankishproject.simplification.moves;
 
-import blankishproject.edgelist.Configuration;
+import blankishproject.simplification.Configuration;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;

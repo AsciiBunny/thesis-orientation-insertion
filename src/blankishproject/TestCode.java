@@ -1,5 +1,6 @@
 package blankishproject;
 
+import blankishproject.simplification.Simplification;
 import blankishproject.ui.DrawPanel;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
@@ -46,7 +47,7 @@ public class TestCode {
         // Use as input
         data.original = polygon.clone();
 
-        Simplification.init(data);
+        Simplification.initState(data.simplificationData, data.original);
         Schematization.init(data);
 
     }

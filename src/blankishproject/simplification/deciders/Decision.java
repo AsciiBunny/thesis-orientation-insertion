@@ -1,7 +1,7 @@
-package blankishproject.deciders;
+package blankishproject.simplification.deciders;
 
-import blankishproject.edgelist.Configuration;
-import blankishproject.moves.MoveType;
+import blankishproject.simplification.Configuration;
+import blankishproject.simplification.moves.MoveType;
 
 public class Decision {
 

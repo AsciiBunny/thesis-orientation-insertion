@@ -1,16 +1,17 @@
-package blankishproject.moves;
+package blankishproject.simplification.moves;
 
-import blankishproject.Simplification;
-import blankishproject.deciders.Decision;
-import blankishproject.edgelist.Configuration;
+import blankishproject.simplification.Simplification;
+import blankishproject.simplification.deciders.Decision;
+import blankishproject.simplification.SimplificationData;
+import blankishproject.simplification.Configuration;
 import nl.tue.geometrycore.geometry.Vector;
-import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.util.DoubleUtil;
 
 import static blankishproject.Util.undirectedEquals;
 
 public class PairNormalMove extends Move {
 
+    protected final SimplificationData data;
     protected final Configuration configuration;
     protected final Configuration pairedConfiguration;
     protected final NormalMove move;
@@ -19,7 +20,8 @@ public class PairNormalMove extends Move {
     protected boolean isValid;
     protected double area;
 
-    public PairNormalMove(Configuration configuration, Configuration pairedConfiguration, NormalMove move, NormalMove pairedMove, Polygon polygon) {
+    public PairNormalMove(Configuration configuration, Configuration pairedConfiguration, NormalMove move, NormalMove pairedMove, SimplificationData data) {
+        this.data = data;
         this.configuration = configuration;
         this.pairedConfiguration = pairedConfiguration;
         this.move = move;
@@ -55,10 +57,10 @@ public class PairNormalMove extends Move {
     @Override
     public void apply() {
         var decision = new Decision(configuration, move.getType(), area, true);
-        Simplification.applyMove(configuration.data, decision);
+        Simplification.applyMove(data, decision);
 
         var pairedDecision = new Decision(pairedConfiguration, pairedMove.getType(), area, true);
-        Simplification.applyMove(configuration.data, pairedDecision);
+        Simplification.applyMove(data, pairedDecision);
 
     }
 

@@ -1,8 +1,8 @@
 package blankishproject.ui;
 
 import blankishproject.Data;
-import blankishproject.Simplification;
-import blankishproject.deciders.IDecider;
+import blankishproject.simplification.Simplification;
+import blankishproject.simplification.deciders.IDecider;
 import nl.tue.geometrycore.gui.sidepanel.SideTab;
 
 import static blankishproject.ui.SidePanel.subTitleFont;
@@ -90,7 +90,7 @@ public class SimplificationTab {
         tab.addButton("Run Test Code [t]", (e -> data.runTestCode()));
 
         tab.addButton("Reset State", (e -> {
-            Simplification.generateConfigurations(data);
+            Simplification.initState(data.simplificationData, data.simplificationData.polygon);
             data.draw.repaint();
             this.repaint();
         }));
@@ -103,7 +103,7 @@ public class SimplificationTab {
         tab.addSeparator(0);
 
         var keySet = IDecider.deciders.keySet().stream().sorted().toArray(String[]::new);
-        tab.addComboBox(keySet, data.deciderType, (e, v) -> data.deciderType = v);
+        tab.addComboBox(keySet, data.simplificationData.deciderType, (e, v) -> data.simplificationData.deciderType = v);
     }
 
 
@@ -139,44 +139,46 @@ public class SimplificationTab {
         tab.addLabel("Debug Draw Options").setFont(titleFont);
         tab.addSeparator(0);
 
-        tab.addCheckbox("Draw Convexity Arcs", data.drawConvexityArcs, (e, b) -> {
-            data.drawConvexityArcs = b;
+        var sData = data.simplificationData;
+
+        tab.addCheckbox("Draw Convexity Arcs", sData.drawConvexityArcs, (e, b) -> {
+            sData.drawConvexityArcs = b;
             data.draw.repaint();
         });
 
-        tab.addCheckbox("Draw Convexity Edges", data.drawConvexityEdges, (e, b) -> {
-            data.drawConvexityEdges = b;
+        tab.addCheckbox("Draw Convexity Edges", sData.drawConvexityEdges, (e, b) -> {
+            sData.drawConvexityEdges = b;
             data.draw.repaint();
         });
 
-        tab.addCheckbox("Draw Positive Contractions", data.drawPositiveContractions, (e, b) -> {
-            data.drawPositiveContractions = b;
+        tab.addCheckbox("Draw Positive Contractions", sData.drawPositiveContractions, (e, b) -> {
+            sData.drawPositiveContractions = b;
             data.draw.repaint();
         });
 
-        tab.addCheckbox("Draw Negative Contractions", data.drawNegativeContractions, (e, b) -> {
-            data.drawNegativeContractions = b;
+        tab.addCheckbox("Draw Negative Contractions", sData.drawNegativeContractions, (e, b) -> {
+            sData.drawNegativeContractions = b;
             data.draw.repaint();
         });
 
-        tab.addCheckbox("Draw Blocking Points", data.drawBlockingPoints, (e, b) -> {
-            data.drawBlockingPoints = b;
+        tab.addCheckbox("Draw Blocking Points", sData.drawBlockingPoints, (e, b) -> {
+            sData.drawBlockingPoints = b;
             data.draw.repaint();
         });
 
-        tab.addCheckbox("Draw Inner Difference", data.drawInnerDifference, (e, b) -> {
-            data.drawInnerDifference = b;
+        tab.addCheckbox("Draw Inner Difference", sData.drawInnerDifference, (e, b) -> {
+            sData.drawInnerDifference = b;
             data.draw.repaint();
         });
 
-        tab.addCheckbox("Draw Outer Difference", data.drawOuterDifference, (e, b) -> {
-            data.drawOuterDifference = b;
+        tab.addCheckbox("Draw Outer Difference", sData.drawOuterDifference, (e, b) -> {
+            sData.drawOuterDifference = b;
             data.draw.repaint();
         });
     }
 
     public void repaint() {
-        var polygon = data.simplification;
+        var polygon = data.simplificationData.polygon;
 
         vertexCountLabel.setNewValue(polygon != null ? polygon.vertexCount() : 0);
         edgeCountLabel.setNewValue(polygon != null ? polygon.edgeCount() : 0);

@@ -1,6 +1,7 @@
 package blankishproject;
 
-import blankishproject.edgelist.ConfigurationList;
+import blankishproject.simplification.SimplificationData;
+import blankishproject.simplification.Simplification;
 import blankishproject.ui.DrawPanel;
 import blankishproject.ui.SidePanel;
 import nl.tue.geometrycore.geometry.BaseGeometry;
@@ -15,7 +16,6 @@ import nl.tue.geometrycore.io.ipe.IPEWriter;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,19 +36,14 @@ public class Data {
     public int currentIndex;
 
     // Simplification
-    public Polygon simplification;
-    public ConfigurationList configurations;
+    public SimplificationData simplificationData = new SimplificationData(new Polygon());
 
     // settings
     public SizeMode sizemode = SizeMode.VIEW;
     public double strokewidth = 3;
     public BaseGeometry selected = null;
 
-    public String deciderType = "4. Minimal Complementary Pair";
-
     public OrientationSet orientations = new OrientationSet();
-
-
 
     // Debug geometry
     public Map<Color, GeometryList<LineSegment>> debugLines = new HashMap<>();
@@ -62,15 +57,6 @@ public class Data {
     public boolean drawOrientations = false;
     public boolean drawClassifications = false;
     public boolean drawSignificance = false;
-
-    public boolean drawConvexityArcs = false;
-    public boolean drawConvexityEdges = false;
-    public boolean drawPositiveContractions = false;
-    public boolean drawNegativeContractions = false;
-    public boolean drawBlockingPoints = false;
-
-    public boolean drawInnerDifference = false;
-    public boolean drawOuterDifference = false;
 
     // keep these last
     public DrawPanel draw;
@@ -108,7 +94,9 @@ public class Data {
                     runChecks();
 
                     Schematization.init(this);
-                    Simplification.init(this);
+                    Simplification.initState(simplificationData, original);
+
+                    draw.zoomToFit();
                 }
             }
 
@@ -133,7 +121,7 @@ public class Data {
         //geometries.clear();
         original = new Polygon();
         schematization = new PolyLine();
-        simplification = new Polygon();
+        simplificationData.init(new Polygon());
 
         Schematization.resetDebug(this);
 
@@ -169,7 +157,7 @@ public class Data {
         // TODO: Run checks
         runChecks();
 
-        Simplification.init(this);
+        Simplification.initState(simplificationData, original);
         Schematization.init(this);
         repaint();
     }

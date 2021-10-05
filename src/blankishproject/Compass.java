@@ -2,14 +2,13 @@ package blankishproject;
 
 import blankishproject.ui.DrawPanel;
 import nl.tue.geometrycore.geometry.Vector;
-import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.geometry.curved.CircularArc;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
+import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.geometryrendering.glyphs.ArrowStyle;
 import nl.tue.geometrycore.geometryrendering.styling.Dashing;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Compass {
@@ -20,12 +19,13 @@ public class Compass {
     public static void draw(Data data, DrawPanel panel) {
         drawOrientationSet(panel, data.orientations, offset(panel, -25 - SIZE, -25 - SIZE));
 
-        if (data.simplification == null) return;
+        if (data.simplificationData.polygon == null) return;
+        if (data.original == null) return;
 
-        var counts = calculateCounts(panel, data.original);
+        var counts = calculateCounts(data.original);
         drawCounts(panel, counts, offset(panel, -25 - SIZE, -25 - SIZE * 4), Color.lightGray);
 
-        var counts2 = calculateCounts(panel, data.simplification);
+        var counts2 = calculateCounts(data.simplificationData.polygon);
         drawCounts(panel, counts2, offset(panel, -25 - SIZE, -25 - SIZE * 7), Color.darkGray);
     }
 
@@ -42,7 +42,7 @@ public class Compass {
         panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
     }
 
-    private static int[] calculateCounts(DrawPanel panel, Polygon polygon) {
+    private static int[] calculateCounts(Polygon polygon) {
         var counts = new int[GROUPS];
         polygon.edges().forEach(lineSegment -> {
             var dir = lineSegment.getDirection();

@@ -1,7 +1,7 @@
-package blankishproject.moves;
+package blankishproject.simplification.moves;
 
 import blankishproject.Util;
-import blankishproject.edgelist.Configuration;
+import blankishproject.simplification.Configuration;
 import nl.tue.geometrycore.geometry.BaseGeometry;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Line;

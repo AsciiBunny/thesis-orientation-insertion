@@ -1,10 +1,10 @@
-package blankishproject;
+package blankishproject.simplification;
 
-import blankishproject.deciders.Decision;
-import blankishproject.deciders.IDecider;
-import blankishproject.edgelist.Configuration;
-import blankishproject.edgelist.ConfigurationList;
-import blankishproject.moves.PairNormalMove;
+import blankishproject.Data;
+import blankishproject.GeometryList;
+import blankishproject.Util;
+import blankishproject.simplification.deciders.Decision;
+import blankishproject.simplification.deciders.IDecider;
 import blankishproject.ui.DrawPanel;
 import nl.tue.geometrycore.geometry.curved.CircularArc;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
@@ -14,8 +14,9 @@ import nl.tue.geometrycore.geometryrendering.styling.Dashing;
 import nl.tue.geometrycore.geometryrendering.styling.TextAnchor;
 import nl.tue.geometrycore.util.DoubleUtil;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Simplification {
 
@@ -38,24 +39,24 @@ public class Simplification {
         totalTimeTaken = lastCycleTimeTaken = 0;
     }
 
-    public static void init(Data data) {
-        data.simplification = data.original.clone();
-        generateConfigurations(data);
+    public static void initState(SimplificationData data, Polygon polygon) {
+        data.init(polygon.clone());
     }
 
     public static void run(Data data) {
-        timedIteration(data, data.simplification);
+        timedIteration(data.simplificationData);
 
-        data.innerDifference = Util.calculateSymmetricDifference(data.simplification, data.original);
-        data.outerDifference = Util.calculateSymmetricDifference(data.original, data.simplification);
+        data.innerDifference = Util.calculateSymmetricDifference(data.simplificationData.polygon, data.original);
+        data.outerDifference = Util.calculateSymmetricDifference(data.original, data.simplificationData.polygon);
     }
 
     public static void run(Data data, int cycles) {
-        var before = data.simplification.vertexCount();
+        var polygon = data.simplificationData.polygon;
+        var before = polygon.vertexCount();
         for (int cycle = 0; cycle < cycles; cycle++) {
-            var done = !iteration(data, data.simplification);
+            var done = !iteration(data.simplificationData);
 
-            var after = data.simplification.vertexCount();
+            var after = polygon.vertexCount();
             if (before != after)
                 System.out.println("Removed " + (before - after) + " vertices out of " + after);
             else
@@ -66,16 +67,18 @@ public class Simplification {
             if (done) break;
         }
 
-        data.innerDifference = Util.calculateSymmetricDifference(data.simplification, data.original);
-        data.outerDifference = Util.calculateSymmetricDifference(data.original, data.simplification);
+        data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
+        data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
     }
 
     public static void runUntilLeft(Data data, int left) {
-        var before = data.simplification.vertexCount();
-        while (before > left) {
-            var done = !iteration(data, data.simplification);
+        var polygon = data.simplificationData.polygon;
 
-            var after = data.simplification.vertexCount();
+        var before = polygon.vertexCount();
+        while (before > left) {
+            var done = !iteration(data.simplificationData);
+
+            var after = polygon.vertexCount();
             if (before != after)
                 System.out.println("Removed " + (before - after) + " vertices out of " + after);
             else
@@ -86,17 +89,17 @@ public class Simplification {
             if (done) break;
         }
 
-        data.innerDifference = Util.calculateSymmetricDifference(data.simplification, data.original);
-        data.outerDifference = Util.calculateSymmetricDifference(data.original, data.simplification);
+        data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
+        data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
     }
 
     public static void finish(Data data) {
         runUntilLeft(data, 0);
     }
 
-    public static boolean timedIteration(Data data, Polygon polygon) {
+    public static boolean timedIteration(SimplificationData data) {
         long start = System.currentTimeMillis();
-        var madeChanged = iteration(data, polygon);
+        var madeChanged = iteration(data);
         long end = System.currentTimeMillis();
         long duration = end - start;
         totalTimeTaken += duration;
@@ -104,16 +107,15 @@ public class Simplification {
         return madeChanged;
     }
 
-    public static boolean iteration(Data data, Polygon polygon) {
-        var configurations = data.configurations;
-
+    public static boolean iteration(SimplificationData data) {
+        // TODO: Better debug lines
         // Reset debug lines
-        resetDebug(data);
-        data.debugLines.put(Color.blue, new GeometryList<>());
-        data.debugArrows.put(Color.blue, new GeometryList<>());
+//        resetDebug(data);
+//        data.debugLines.put(Color.blue, new GeometryList<>());
+//        data.debugArrows.put(Color.blue, new GeometryList<>());
 
         // Find moves
-        var moves = new ArrayList<>(IDecider.deciders.get(data.deciderType).findMoves(polygon, configurations));
+        var moves = new ArrayList<>(IDecider.deciders.get(data.deciderType).findMoves(data));
         var madeChanges = moves.size() > 0;
 
         // Reset Debug values
@@ -140,18 +142,19 @@ public class Simplification {
         return madeChanges;
     }
 
-    public static void applyMove(Data data, Decision move) {
+    public static void applyMove(SimplificationData data, Decision move) {
         var configuration = move.configuration;
 
         totalAreaEffected += move.removeArea;
         lastCycleAreaEffected += move.removeArea;
 
-        data.debugArrows.get(Color.blue).add(configuration.inner.clone());
+        // TODO: Better debug lines
+        //data.debugArrows.get(Color.blue).add(configuration.inner.clone());
 
         var configurationIndex = configuration.index;
         var removed = configuration.performMove(move.type, move.removeArea, move.requiresCleanup);
 
-        data.debugLines.get(Color.blue).add(configuration.inner.clone());
+        //data.debugLines.get(Color.blue).add(configuration.inner.clone());
 
         totalVerticesRemoved += removed.size();
         lastCycleVerticesRemoved += removed.size();
@@ -190,7 +193,7 @@ public class Simplification {
         for (int i = 0; i < data.configurations.size(); i++) {
             var c = data.configurations.get(i);
 
-            assert c.inner.getStart() == data.simplification.vertex(i) : "index for " + i + " not correct (" + c.index + ")";
+            assert c.inner.getStart() == data.polygon.vertex(i) : "index for " + i + " not correct (" + c.index + ")";
             assert c.index == i : c.index + " != " + i + " for config: " + c;
         }
 
@@ -201,51 +204,24 @@ public class Simplification {
             end += data.configurations.size();
         for (var i = start; i <= end; i++) {
             var index = (i + data.configurations.size()) % data.configurations.size();
-            generateSpecialPairs(data, index);
+            data.initSpecialPairs(index);
         }
 
         //TODO: Blocking numbers
     }
 
-    public static void generateConfigurations(Data data) {
-        data.configurations = new ConfigurationList(data);
-
-        for (int index = 0; index < data.configurations.size(); index++) {
-            generateSpecialPairs(data, index);
-        }
-    }
-
-    public static void generateSpecialPairs(Data data, int index) {
-        var configurations = data.configurations;
-        var a = configurations.get((index - 2 + configurations.size()) % configurations.size());
-        var b = configurations.get(index);
-
-        a.positivePairMove = null;
-        a.negativePairMove = null;
-
-        if (!a.isSpecialPairNeighbouring(b))
-            return;
-
-        if (a.positiveNormalMove.hasValidContraction() && b.negativeNormalMove.hasValidContraction()) {
-            a.positivePairMove = new PairNormalMove(a, b, a.positiveNormalMove, b.negativeNormalMove, data.simplification);
-        }
-
-        if (a.negativeNormalMove.hasValidContraction() && b.positiveNormalMove.hasValidContraction()) {
-            a.negativePairMove = new PairNormalMove(a, b, a.negativeNormalMove, b.positiveNormalMove, data.simplification);
-        }
-    }
-
     //region debug
 
     public static void resetDebug(Data data) {
-        data.debugLines.clear();
-        data.debugArrows.clear();
+        // TODO: Better debug lines
+//        data.debugLines.clear();
+//        data.debugArrows.clear();
     }
 
-    public static void drawDebug(Data data, DrawPanel panel) {
-        if (data.simplification == null) return;
+    public static void drawDebug(SimplificationData data, DrawPanel panel) {
+        if (data.polygon == null) return;
 
-        ConfigurationList configurationList = data.configurations;
+        var configurationList = data.configurations;
         if (configurationList == null)
             return;
 
@@ -263,7 +239,7 @@ public class Simplification {
             drawBlockingVectors(panel, configurationList, Color.cyan);
     }
 
-    private static void drawBlockingVectors(DrawPanel panel, ConfigurationList list, Color color) {
+    private static void drawBlockingVectors(DrawPanel panel, List<Configuration> list, Color color) {
         panel.setStroke(color, 3, Dashing.dashed(3));
         panel.setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 5);
 
@@ -283,7 +259,7 @@ public class Simplification {
         panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
     }
 
-    private static void drawMovementDirectionDebugLines(Data data, ConfigurationList list, Color outwardsColor, Color inwardsColor) {
+    private static void drawMovementDirectionDebugLines(Data data, List<Configuration> list, Color outwardsColor, Color inwardsColor) {
         var outwardsDebugLines = data.debugLines.getOrDefault(outwardsColor, new GeometryList<>());
         var inwardsDebugLines = data.debugLines.getOrDefault(inwardsColor, new GeometryList<>());
 
@@ -308,7 +284,7 @@ public class Simplification {
         data.debugLines.put(inwardsColor, inwardsDebugLines);
     }
 
-    private static void drawDebugPositiveContractions(DrawPanel panel, ConfigurationList list, Color contractionColor, Color directionColor) {
+    private static void drawDebugPositiveContractions(DrawPanel panel, List<Configuration> list, Color contractionColor, Color directionColor) {
         for (var configuration : list) {
             if (!configuration.positiveNormalMove.hasValidContraction()) continue;
             var contraction = configuration.positiveNormalMove.getContraction();
@@ -337,7 +313,7 @@ public class Simplification {
         }
     }
 
-    private static void drawDebugNegativeContractions(DrawPanel panel, ConfigurationList list, Color contractionColor, Color directionColor) {
+    private static void drawDebugNegativeContractions(DrawPanel panel, List<Configuration> list, Color contractionColor, Color directionColor) {
         for (var configuration : list) {
             if (!configuration.negativeNormalMove.hasValidContraction()) continue;
             var contraction = configuration.negativeNormalMove.getContraction();
@@ -360,7 +336,7 @@ public class Simplification {
         }
     }
 
-    private static void drawDebugConvexityArcs(DrawPanel panel, ConfigurationList list, Color convexColor, Color reflexColor) {
+    private static void drawDebugConvexityArcs(DrawPanel panel, List<Configuration> list, Color convexColor, Color reflexColor) {
         for (var conf : list) {
             var arcStart = conf.previous.getDirection();
             arcStart.scale(-10);
@@ -383,7 +359,7 @@ public class Simplification {
 
     }
 
-    private static void drawDebugConvexityLines(DrawPanel panel, ConfigurationList list, Color convexColor, Color reflexColor) {
+    private static void drawDebugConvexityLines(DrawPanel panel, List<Configuration> list, Color convexColor, Color reflexColor) {
         for (var conf : list) {
             if (conf.isInnerConvex()) {
                 panel.setStroke(convexColor, 3, Dashing.SOLID);

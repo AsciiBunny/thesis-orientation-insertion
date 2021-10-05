@@ -14,6 +14,7 @@
 package blankishproject.ui;
 
 import blankishproject.*;
+import blankishproject.simplification.Simplification;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Rectangle;
 import nl.tue.geometrycore.geometryrendering.GeometryPanel;
@@ -47,8 +48,8 @@ public class DrawPanel extends GeometryPanel {
         if (data.schematization != null && data.schematization.vertexCount() > 0)
             draw(data.schematization);
 
-        if (data.simplification != null && data.simplification.vertexCount() < data.original.vertexCount())
-            draw(data.simplification);
+        if (data.simplificationData.polygon != null && data.original != null && data.simplificationData.polygon.vertexCount() < data.original.vertexCount())
+            draw(data.simplificationData.polygon);
 
         if (data.copyMode)
             return;
@@ -67,19 +68,19 @@ public class DrawPanel extends GeometryPanel {
             draw(data.debugArrows.get(color));
         }
 
-        if (data.drawInnerDifference && data.innerDifference != null) {
+        if (data.simplificationData.drawInnerDifference && data.innerDifference != null) {
             setStroke(Color.pink, data.strokewidth, Dashing.SOLID);
             draw(data.innerDifference);
         }
 
-        if (data.drawOuterDifference && data.outerDifference != null) {
+        if (data.simplificationData.drawOuterDifference && data.outerDifference != null) {
             setStroke(Color.pink, data.strokewidth, Dashing.SOLID);
             draw(data.outerDifference);
         }
 
 
         Schematization.drawDebug(data, this);
-        Simplification.drawDebug(data, this);
+        Simplification.drawDebug(data.simplificationData, this);
         Compass.draw(data, this);
         TestCode.draw(data, this);
     }
@@ -87,7 +88,7 @@ public class DrawPanel extends GeometryPanel {
     @Override
     public Rectangle getBoundingRectangle() {
         //return Rectangle.byBoundingBox(data.geometries);
-        return Rectangle.byBoundingBox(Arrays.asList(data.original, data.simplification, data.schematization));
+        return Rectangle.byBoundingBox(Arrays.asList(data.original, data.simplificationData.polygon, data.schematization));
     }
 
     @Override

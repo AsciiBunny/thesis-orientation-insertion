@@ -1,4 +1,4 @@
-package blankishproject.moves;
+package blankishproject.simplification.moves;
 
 public enum MoveType {
     NONE,

@@ -1,8 +1,7 @@
-package blankishproject.edgelist;
+package blankishproject.simplification;
 
-import blankishproject.Data;
 import blankishproject.Util;
-import blankishproject.moves.*;
+import blankishproject.simplification.moves.*;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Line;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
@@ -17,7 +16,6 @@ import static blankishproject.Util.undirectedEquals;
 
 public class Configuration {
 
-    public final Data data;
     private final Polygon polygon;
     public int index;
     public LineSegment previous;
@@ -29,9 +27,8 @@ public class Configuration {
     public PairNormalMove positivePairMove;
     public PairNormalMove negativePairMove;
 
-    public Configuration(Data data, int index) {
-        this.data = data;
-        this.polygon = data.simplification;
+    public Configuration(Polygon polygon, int index) {
+        this.polygon = polygon;
         this.index = index;
 
         init();

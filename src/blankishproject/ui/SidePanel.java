@@ -13,9 +13,7 @@
  */
 package blankishproject.ui;
 
-import blankishproject.Simplification;
 import blankishproject.Data;
-import blankishproject.deciders.IDecider;
 import nl.tue.geometrycore.geometryrendering.styling.SizeMode;
 import nl.tue.geometrycore.gui.sidepanel.SideTab;
 import nl.tue.geometrycore.gui.sidepanel.TabbedSidePanel;

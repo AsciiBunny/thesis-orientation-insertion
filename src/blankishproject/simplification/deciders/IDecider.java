@@ -1,7 +1,6 @@
-package blankishproject.deciders;
+package blankishproject.simplification.deciders;
 
-import blankishproject.edgelist.ConfigurationList;
-import nl.tue.geometrycore.geometry.linear.Polygon;
+import blankishproject.simplification.SimplificationData;
 
 import java.util.List;
 import java.util.Map;
@@ -16,7 +15,7 @@ public interface IDecider {
         Map.entry("4. Minimal Complementary Pair", new MinimalComplementaryPairDecider())
     );
 
-    List<Decision> findMoves(Polygon polygon, ConfigurationList configurations);
+    List<Decision> findMoves(SimplificationData data);
 
 }
 

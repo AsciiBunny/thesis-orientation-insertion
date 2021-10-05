@@ -1,8 +1,8 @@
-package blankishproject.deciders;
+package blankishproject.simplification.deciders;
 
-import blankishproject.edgelist.Configuration;
-import blankishproject.edgelist.ConfigurationList;
-import blankishproject.moves.MoveType;
+import blankishproject.simplification.moves.MoveType;
+import blankishproject.simplification.Configuration;
+import blankishproject.simplification.SimplificationData;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.util.DoubleUtil;
 
@@ -14,15 +14,15 @@ import static blankishproject.Util.undirectedEquals;
 public class MinimalComplementaryPairDecider implements IDecider {
 
     @Override
-    public List<Decision> findMoves(Polygon polygon, ConfigurationList configurations) {
-        var bestSpecialPair = findPairMove(configurations);
-        var bestNormalPair = findNormalPair(polygon, configurations);
+    public List<Decision> findMoves(SimplificationData data) {
+        var bestSpecialPair = findPairMove(data.configurations);
+        var bestNormalPair = findNormalPair(data.polygon, data.configurations);
 
         System.out.println("bestSpecialPair.size() = " + bestSpecialPair.size());
         return bestSpecialPair.size() > 0 ? bestSpecialPair : bestNormalPair;
     }
 
-    public List<Decision> findNormalPair(Polygon polygon, ConfigurationList configurations) {
+    public List<Decision> findNormalPair(Polygon polygon, List<Configuration> configurations) {
         Configuration minPositive = null;
         double minPositiveArea = Double.MAX_VALUE;
         for (var configuration : configurations) {
@@ -62,13 +62,11 @@ public class MinimalComplementaryPairDecider implements IDecider {
 
     }
 
-    private List<Decision> findPairMove(ConfigurationList configurations) {
+    private List<Decision> findPairMove(List<Configuration> configurations) {
         var bestArea = Double.MAX_VALUE;
         List<Decision> best = Collections.emptyList();
 
-        for (int i = 0; i < configurations.size(); i++) {
-            var configuration = configurations.get(i);
-
+        for (Configuration configuration : configurations) {
             if (configuration.hasMove(MoveType.POSITIVE_PAIR)) {
                 var move = configuration.getMove(MoveType.POSITIVE_PAIR);
                 if (move.getAffectedArea() < bestArea) {

@@ -1,9 +1,8 @@
-package blankishproject.deciders;
+package blankishproject.simplification.deciders;
 
-import blankishproject.edgelist.Configuration;
-import blankishproject.edgelist.ConfigurationList;
-import blankishproject.moves.MoveType;
-import nl.tue.geometrycore.geometry.linear.Polygon;
+import blankishproject.simplification.moves.MoveType;
+import blankishproject.simplification.Configuration;
+import blankishproject.simplification.SimplificationData;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,7 +11,8 @@ import static blankishproject.Util.undirectedEquals;
 
 public class MinimalPairDecider implements IDecider {
     @Override
-    public List<Decision> findMoves(Polygon polygon, ConfigurationList configurations) {
+    public List<Decision> findMoves(SimplificationData data) {
+        var configurations = data.configurations;
         Configuration minPositive = null;
         double minPositiveArea = Double.MAX_VALUE;
         for (var configuration : configurations) {
