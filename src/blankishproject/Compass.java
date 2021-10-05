@@ -2,6 +2,7 @@ package blankishproject;
 
 import blankishproject.ui.DrawPanel;
 import nl.tue.geometrycore.geometry.Vector;
+import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.geometry.curved.CircularArc;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometryrendering.glyphs.ArrowStyle;
@@ -21,18 +22,11 @@ public class Compass {
 
         if (data.simplification == null) return;
 
+        var counts = calculateCounts(panel, data.original);
+        drawCounts(panel, counts, offset(panel, -25 - SIZE, -25 - SIZE * 4), Color.lightGray);
 
-        var counts = new int[GROUPS];
-        data.simplification.edges().forEach(lineSegment -> {
-            var dir = lineSegment.getDirection();
-            var angle = dir.computeClockwiseAngleTo(Vector.up());
-            var degrees = angle / (2 * Math.PI) * 360;
-            var group = (int) Math.round(degrees / (GROUPS)) % GROUPS;
-            counts[group]++;
-        });
-
-        //System.out.println("counts = " + Arrays.toString(counts));
-        drawCounts(panel, counts, offset(panel, -25 - SIZE, -25 - SIZE * 4));
+        var counts2 = calculateCounts(panel, data.simplification);
+        drawCounts(panel, counts2, offset(panel, -25 - SIZE, -25 - SIZE * 7), Color.darkGray);
     }
 
     private static void drawOrientationSet(DrawPanel panel, OrientationSet orientations, Vector center) {
@@ -48,7 +42,24 @@ public class Compass {
         panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
     }
 
-    private static void drawCounts(DrawPanel panel, int[] counts, Vector center) {
+    private static int[] calculateCounts(DrawPanel panel, Polygon polygon) {
+        var counts = new int[GROUPS];
+        polygon.edges().forEach(lineSegment -> {
+            var dir = lineSegment.getDirection();
+            var angle = dir.computeClockwiseAngleTo(Vector.up());
+            var degrees = angle / (2 * Math.PI) * 360;
+            var group = ((int) Math.floor(degrees / 180 * GROUPS)) % GROUPS;
+
+            counts[group]++;
+        });
+
+        return counts;
+    }
+
+    private static void drawCounts(DrawPanel panel, int[] counts, Vector center, Color color) {
+        panel.setStroke(color, 3, Dashing.SOLID);
+        panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
+
         var maxCount = Arrays.stream(counts).max().getAsInt();
         var lengthRatio = panel.convertViewToWorld(SIZE);
         var segmentSize = (Math.PI) / counts.length;
@@ -80,7 +91,7 @@ public class Compass {
         }
     }
 
-    private static Vector offset(DrawPanel panel, double x,  double y) {
+    private static Vector offset(DrawPanel panel, double x, double y) {
         return panel.convertViewToWorld(new Vector(panel.getWidth() + x, panel.getHeight() + y));
     }
 }
