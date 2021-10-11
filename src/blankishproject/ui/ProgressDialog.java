@@ -4,6 +4,8 @@ import blankishproject.Data;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class ProgressDialog {
 
@@ -11,6 +13,7 @@ public class ProgressDialog {
 
     private JDialog dialog;
     private JProgressBar progressBar;
+    private JLabel label;
     private Thread dialogThread;
 
     public ProgressDialog(JFrame frame, Data data) {
@@ -21,14 +24,24 @@ public class ProgressDialog {
 
     private void setupJDialog(JFrame frame) {
         dialog = new JDialog(frame, "Simplification Progress", true);
+
         progressBar = new JProgressBar(0, 500);
         progressBar.setStringPainted(true);
 
+        label = new JLabel("Progress: ");
+
         dialog.add(BorderLayout.CENTER, progressBar);
-        dialog.add(BorderLayout.NORTH, new JLabel("Progress..."));
+        dialog.add(BorderLayout.NORTH, label);
         dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         dialog.setSize(300, 75);
         dialog.setLocationRelativeTo(frame);
+
+        dialog.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                data.canceled = true;
+            };
+        });
     }
 
     public void show() {
@@ -46,6 +59,7 @@ public class ProgressDialog {
 
     public void update() {
         progressBar.setValue(data.progress);
+        label.setText("Progress: " + data.progress + "/" + data.maxProgress);
         progressBar.repaint();
     }
 }

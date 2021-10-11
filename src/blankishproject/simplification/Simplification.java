@@ -57,7 +57,9 @@ public class Simplification {
     public static void run(Data data, int cycles) {
         var polygon = data.simplificationData.polygon;
         var before = polygon.vertexCount();
+        data.canceled = false;
         for (int cycle = 0; cycle < cycles; cycle++) {
+            if (data.canceled) break;
             var done = !iteration(data.simplificationData);
 
             var after = polygon.vertexCount();
@@ -80,9 +82,11 @@ public class Simplification {
 
     public static void runUntilLeft(Data data, int left) {
         var polygon = data.simplificationData.polygon;
-
         var before = polygon.vertexCount();
+        data.canceled = false;
         while (before > left) {
+            if (data.canceled) break;
+
             var done = !iteration(data.simplificationData);
 
             var after = polygon.vertexCount();

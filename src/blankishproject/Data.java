@@ -62,6 +62,7 @@ public class Data {
 
     public int progress = 0;
     public int maxProgress = 0;
+    public boolean canceled = false;
 
     // keep these last
     public DrawPanel draw;
