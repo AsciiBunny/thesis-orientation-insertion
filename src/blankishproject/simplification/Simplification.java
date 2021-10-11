@@ -6,13 +6,13 @@ import blankishproject.Util;
 import blankishproject.simplification.deciders.Decision;
 import blankishproject.simplification.deciders.IDecider;
 import blankishproject.ui.DrawPanel;
+import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.curved.CircularArc;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.geometryrendering.glyphs.ArrowStyle;
 import nl.tue.geometrycore.geometryrendering.styling.Dashing;
 import nl.tue.geometrycore.geometryrendering.styling.TextAnchor;
-import nl.tue.geometrycore.util.DoubleUtil;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -168,8 +168,6 @@ public class Simplification {
         //lastCycleVerticesRemoved += removed.size();
 
 
-
-
         // Collect affected configurations around moved edge
         var affectedIndexes = new ArrayList<Integer>(affectedRange * 2 + 1);
         for (var i = decisionIndex - affectedRange; i <= decisionIndex + affectedRange; i++) {
@@ -184,26 +182,29 @@ public class Simplification {
 
         // TODO: Keep track of removed vertices
         // TODO: COMMENT THIS
-        var left = validityCheck(data, affectedIndexes);
+        var removed = new ArrayList<Vector>();
+        var left = validityCheck(data, affectedIndexes, removed);
         for (var index : left) {
             var configuration = new Configuration(data.polygon, index);
             data.configurations.set(index, configuration);
         }
         // Second cleanup for straight-lines that popup after 0-lengths are removed
-        left = validityCheck(data, left);
+        left = validityCheck(data, left, removed);
 
         resetIndices(data, left);
 
         //TODO: Blocking numbers
+        updateBlockingNumbers(data, removed);
     }
 
-    private static List<Integer> validityCheck(SimplificationData data, List<Integer> affected) {
+    private static List<Integer> validityCheck(SimplificationData data, List<Integer> affected, List<Vector> removed) {
         var leftIndexes = new ArrayList<Integer>(affectedRange * 2 + 1);
         for (var index : affected) {
             var configuration = data.configurations.get(index);
 
             if (configuration.wasInvalidated()) {
-                data.removeAtIndex(index);
+                var vector = data.removeAtIndex(index);
+                removed.add(vector);
                 // Update indexes in configurations
                 data.configurations.forEach(c -> {
                     if (index < c.index) {
@@ -230,11 +231,11 @@ public class Simplification {
             assert !configuration.wasInvalidated();
         }
 
-        assert data.polygon.vertices().size() == data.configurations.size(): data.polygon.vertices().size() + " != " + data.configurations.size();
-        assert data.polygon.vertices().size() == data.positiveMoves.size(): data.polygon.vertices().size() + " != " + data.positiveMoves.size();
-        assert data.polygon.vertices().size() == data.negativeMoves.size(): data.polygon.vertices().size() + " != " + data.negativeMoves.size();
-        assert data.polygon.vertices().size() == data.positivePairMoves.size(): data.polygon.vertices().size() + " != " + data.positivePairMoves.size();
-        assert data.polygon.vertices().size() == data.negativePairMoves.size(): data.polygon.vertices().size() + " != " + data.negativePairMoves.size();
+        assert data.polygon.vertices().size() == data.configurations.size() : data.polygon.vertices().size() + " != " + data.configurations.size();
+        assert data.polygon.vertices().size() == data.positiveMoves.size() : data.polygon.vertices().size() + " != " + data.positiveMoves.size();
+        assert data.polygon.vertices().size() == data.negativeMoves.size() : data.polygon.vertices().size() + " != " + data.negativeMoves.size();
+        assert data.polygon.vertices().size() == data.positivePairMoves.size() : data.polygon.vertices().size() + " != " + data.positivePairMoves.size();
+        assert data.polygon.vertices().size() == data.negativePairMoves.size() : data.polygon.vertices().size() + " != " + data.negativePairMoves.size();
         //endregion asserts
 
         return leftIndexes;
@@ -253,7 +254,13 @@ public class Simplification {
         }
     }
 
-    //region debug drawing
+    private static void updateBlockingNumbers(SimplificationData data, ArrayList<Vector> removed) {
+        data.positiveMoves.forEach(move -> move.updateBlockingVectors(removed));
+        data.negativeMoves.forEach(move -> move.updateBlockingVectors(removed));
+        // TODO: Complementary moves
+    }
+
+        //region debug drawing
 
     public static void resetDebug(Data data) {
         // TODO: Better debug lines

@@ -304,4 +304,17 @@ public abstract class NormalMove extends Move {
         return vertices.stream().filter(vector -> boundary.stream().noneMatch(bound -> bound.isApproximately(vector))).collect(Collectors.toList());
     }
     //endregion
+
+    public void updateBlockingVectors(List<Vector> removed) {
+        if (!this.hasContraction()) return;
+
+        blockingVectors.removeAll(removed);
+
+        var contractionArea = new Polygon(configuration.inner.getStart(), configuration.inner.getEnd(), contraction.getEnd(), contraction.getStart());
+        var before = getBlockingNumber();
+        blockingVectors = blockingVectors.stream().filter(contractionArea::contains).collect(Collectors.toList());
+
+        if (getBlockingNumber() != before)
+            System.out.println("Removed " + (before - getBlockingNumber()) + " blocking vertices");
+    }
 }

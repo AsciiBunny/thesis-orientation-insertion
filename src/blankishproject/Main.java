@@ -26,7 +26,7 @@ public class Main {
      */
     public static void main(String[] args) {
         Data data = new Data();
-        GUIUtil.makeMainFrame("Blank-ish project", data.draw, data.side);
+        GUIUtil.makeMainFrame("Polygon Simplification", data.draw, data.side);
     }
 
 }

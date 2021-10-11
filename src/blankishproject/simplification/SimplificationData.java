@@ -3,6 +3,7 @@ package blankishproject.simplification;
 import blankishproject.simplification.moves.NegativeNormalMove;
 import blankishproject.simplification.moves.PairNormalMove;
 import blankishproject.simplification.moves.PositiveNormalMove;
+import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 
 import java.util.ArrayList;
@@ -46,13 +47,13 @@ public class SimplificationData {
         initAllSpecialPairs();
     }
 
-    public void removeAtIndex(int index) {
-        polygon.removeVertex(index);
+    public Vector removeAtIndex(int index) {
         configurations.remove(index);
         positiveMoves.remove(index);
         negativeMoves.remove(index);
         positivePairMoves.remove(index);
         negativePairMoves.remove(index);
+        return polygon.removeVertex(index);
     }
 
     public void resetAtIndex(int index) {
