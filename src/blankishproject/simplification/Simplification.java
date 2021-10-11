@@ -68,6 +68,9 @@ public class Simplification {
 
             before = after;
 
+            data.progress = cycle;
+            data.dialog.update();
+
             if (done) break;
         }
 
@@ -88,6 +91,8 @@ public class Simplification {
             else
                 System.out.println("Removed 0 vertices");
 
+            data.progress = data.maxProgress - after + left;
+            data.dialog.update();
             before = after;
 
             if (done) break;

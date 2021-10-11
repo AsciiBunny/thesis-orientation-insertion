@@ -3,6 +3,7 @@ package blankishproject;
 import blankishproject.simplification.SimplificationData;
 import blankishproject.simplification.Simplification;
 import blankishproject.ui.DrawPanel;
+import blankishproject.ui.ProgressDialog;
 import blankishproject.ui.SidePanel;
 import nl.tue.geometrycore.geometry.BaseGeometry;
 import nl.tue.geometrycore.geometry.Vector;
@@ -14,6 +15,7 @@ import nl.tue.geometrycore.io.ReadItem;
 import nl.tue.geometrycore.io.ipe.IPEReader;
 import nl.tue.geometrycore.io.ipe.IPEWriter;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.util.HashMap;
@@ -58,9 +60,13 @@ public class Data {
     public boolean drawClassifications = false;
     public boolean drawSignificance = false;
 
+    public int progress = 0;
+    public int maxProgress = 0;
+
     // keep these last
     public DrawPanel draw;
     public SidePanel side;
+    public ProgressDialog dialog;
 
     public Data() {
         this.draw = new DrawPanel(this);
@@ -137,18 +143,57 @@ public class Data {
     }
 
     public void runXCyclesSimplificationAlgorithm(int cycles) {
-        Simplification.run(this, cycles);
-        repaint();
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() {
+                maxProgress = cycles;
+                dialog.show();
+                Simplification.run(Data.this, cycles);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                dialog.stop();
+                repaint();
+            }
+        }.execute();
     }
 
     public void runUntilKLeftSimplificationAlgorithm(int K) {
-        Simplification.runUntilLeft(this, K);
-        repaint();
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() {
+                maxProgress = simplificationData.polygon.vertexCount() - K;
+                dialog.show();
+                Simplification.runUntilLeft(Data.this, K);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                dialog.stop();
+                repaint();
+            }
+        }.execute();
     }
 
     public void finishSimplificationAlgorithm() {
-        Simplification.finish(this);
-        repaint();
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() {
+                maxProgress = simplificationData.polygon.vertexCount();
+                dialog.show();
+                Simplification.finish(Data.this);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                dialog.stop();
+                repaint();
+            }
+        }.execute();
     }
 
     public void setAsInputSimplificationAlgorithm() {

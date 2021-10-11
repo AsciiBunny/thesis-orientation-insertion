@@ -13,6 +13,7 @@
  */
 package blankishproject;
 
+import blankishproject.ui.ProgressDialog;
 import nl.tue.geometrycore.gui.GUIUtil;
 
 /**
@@ -26,7 +27,8 @@ public class Main {
      */
     public static void main(String[] args) {
         Data data = new Data();
-        GUIUtil.makeMainFrame("Polygon Simplification", data.draw, data.side);
+        var frame = GUIUtil.makeMainFrame("Polygon Simplification", data.draw, data.side);
+        data.dialog = new ProgressDialog(frame, data);
     }
 
 }
