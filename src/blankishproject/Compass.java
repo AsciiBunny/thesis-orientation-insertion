@@ -15,6 +15,7 @@ public class Compass {
 
     public static final double SIZE = 100;
     public static final int GROUPS = 8;
+    public static final int OFFSET = 360 / (GROUPS * 2);
 
     public static void draw(Data data, DrawPanel panel) {
         drawOrientationSet(panel, data.orientations, offset(panel, -25 - SIZE, -25 - SIZE));
@@ -48,7 +49,8 @@ public class Compass {
             var dir = lineSegment.getDirection();
             var angle = dir.computeClockwiseAngleTo(Vector.up());
             var degrees = angle / (2 * Math.PI) * 360;
-            var group = ((int) Math.floor(degrees / 180 * GROUPS)) % GROUPS;
+            var offsetDegrees = (degrees + OFFSET) % 360;
+            var group = ((int) Math.floor(offsetDegrees / 180 * GROUPS)) % GROUPS;
 
             counts[group]++;
         });
@@ -70,6 +72,7 @@ public class Compass {
 
             var dir = Vector.up();
             dir.scale(length * lengthRatio);
+            dir.rotate(-segmentSize / 2);
             dir.rotate(segmentSize * i);
             var dir2 = dir.clone();
             dir.rotate(segmentSize);
