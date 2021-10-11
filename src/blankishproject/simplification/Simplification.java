@@ -16,9 +16,13 @@ import nl.tue.geometrycore.util.DoubleUtil;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Simplification {
+
+    private static final int affectedRange = 4;
+
 
     public static int totalVerticesRemoved = 0;
     public static int lastCycleVerticesRemoved = 0;
@@ -142,75 +146,114 @@ public class Simplification {
         return madeChanges;
     }
 
-    public static void applyMove(SimplificationData data, Decision move) {
-        var configuration = move.configuration;
+    public static void applyMove(SimplificationData data, Decision decision) {
+        var decisionConfiguration = decision.configuration;
+        var decisionIndex = decisionConfiguration.index;
 
-        totalAreaEffected += move.removeArea;
-        lastCycleAreaEffected += move.removeArea;
+        totalAreaEffected += decision.removeArea;
+        lastCycleAreaEffected += decision.removeArea;
 
         // TODO: Better debug lines
         //data.debugArrows.get(Color.blue).add(configuration.inner.clone());
 
-        var configurationIndex = configuration.index;
-        var removed = configuration.performMove(move.type, move.removeArea, move.requiresCleanup);
+
+        decision.move.applyForArea(decision.removeArea);
+        //List<Integer> removed = decision.requiresCleanup ? decision.configuration.moveCleanup() : Collections.emptyList();
+        if (!decision.requiresCleanup) return;
+        //System.out.println("removed = " + removed);
 
         //data.debugLines.get(Color.blue).add(configuration.inner.clone());
 
-        totalVerticesRemoved += removed.size();
-        lastCycleVerticesRemoved += removed.size();
+        //totalVerticesRemoved += removed.size();
+        //lastCycleVerticesRemoved += removed.size();
 
-        data.configurations.forEach(c -> {
-            removed.forEach(i -> {
-                if (i <= c.index && c != configuration) {
-                    c.index--;
-                }
-            });
-        });
 
-        // Collected affected configurations around moved edge
-        var affectedConfigurations = new ArrayList<Configuration>(5);
-        for (var i = configurationIndex - 2; i <= configurationIndex + 2; i++) {
+
+
+        // Collect affected configurations around moved edge
+        var affectedIndexes = new ArrayList<Integer>(affectedRange * 2 + 1);
+        for (var i = decisionIndex - affectedRange; i <= decisionIndex + affectedRange; i++) {
             var index = (i + data.configurations.size()) % data.configurations.size();
-            affectedConfigurations.add(data.configurations.get(index));
+            affectedIndexes.add(index);
         }
 
-        // Reset all configurations in affected area
-        // TODO: minmax doesnt work when overlapping list end-start
-        var firstIndex = -1;
-        var lastIndex = -1;
-        for (var affected : affectedConfigurations) {
-            if (affected.index == -1 || DoubleUtil.close(affected.inner.length(), 0)) {
-                data.configurations.remove(affected);
-                continue;
-            }
 
-            affected.init();
+        // Sort indexes backwards so indexed removals work correctly
+        affectedIndexes.sort(Collections.reverseOrder());
 
-            if (firstIndex == -1) firstIndex = affected.index;
-            lastIndex = affected.index;
+
+        // TODO: Keep track of removed vertices
+        // TODO: COMMENT THIS
+        var left = validityCheck(data, affectedIndexes);
+        for (var index : left) {
+            var configuration = new Configuration(data.polygon, index);
+            data.configurations.set(index, configuration);
         }
+        // Second cleanup for straight-lines that popup after 0-lengths are removed
+        left = validityCheck(data, left);
 
-        for (int i = 0; i < data.configurations.size(); i++) {
-            var c = data.configurations.get(i);
-
-            assert c.inner.getStart() == data.polygon.vertex(i) : "index for " + i + " not correct (" + c.index + ")";
-            assert c.index == i : c.index + " != " + i + " for config: " + c;
-        }
-
-        var start = (firstIndex - 2);
-        var end = lastIndex + 2;
-        // 7 & 3 -> 7 & 10
-        if (lastIndex < firstIndex)
-            end += data.configurations.size();
-        for (var i = start; i <= end; i++) {
-            var index = (i + data.configurations.size()) % data.configurations.size();
-            data.initSpecialPairs(index);
-        }
+        resetIndices(data, left);
 
         //TODO: Blocking numbers
     }
 
-    //region debug
+    private static List<Integer> validityCheck(SimplificationData data, List<Integer> affected) {
+        var leftIndexes = new ArrayList<Integer>(affectedRange * 2 + 1);
+        for (var index : affected) {
+            var configuration = data.configurations.get(index);
+
+            if (configuration.wasInvalidated()) {
+                data.removeAtIndex(index);
+                // Update indexes in configurations
+                data.configurations.forEach(c -> {
+                    if (index < c.index) {
+                        c.index--;
+                    }
+                });
+                // Update indexes in leftIndexes appropriately
+                for (int i = 0; i < leftIndexes.size(); i++) {
+                    if (index <= leftIndexes.get(i)) {
+                        leftIndexes.set(i, leftIndexes.get(i) - 1);
+                    }
+                }
+            } else {
+                leftIndexes.add(configuration.index);
+            }
+        }
+
+        // region asserts
+        // Check if clean up left all indices correct
+        for (int i = 0; i < data.configurations.size(); i++) {
+            var configuration = data.configurations.get(i);
+
+            assert configuration.index == i : configuration.index + " != " + i + " for config: " + configuration;
+            assert !configuration.wasInvalidated();
+        }
+
+        assert data.polygon.vertices().size() == data.configurations.size(): data.polygon.vertices().size() + " != " + data.configurations.size();
+        assert data.polygon.vertices().size() == data.positiveMoves.size(): data.polygon.vertices().size() + " != " + data.positiveMoves.size();
+        assert data.polygon.vertices().size() == data.negativeMoves.size(): data.polygon.vertices().size() + " != " + data.negativeMoves.size();
+        assert data.polygon.vertices().size() == data.positivePairMoves.size(): data.polygon.vertices().size() + " != " + data.positivePairMoves.size();
+        assert data.polygon.vertices().size() == data.negativePairMoves.size(): data.polygon.vertices().size() + " != " + data.negativePairMoves.size();
+        //endregion asserts
+
+        return leftIndexes;
+    }
+
+    private static void resetIndices(SimplificationData data, List<Integer> indices) {
+        // completely reset and reinitialize all configurations that did not get deleted
+        for (var index : indices) {
+            data.resetAtIndex(index);
+        }
+
+        for (var index : indices) {
+            data.resetSpecialPairs(index);
+            var offsetIndex = (index - 2 + data.configurations.size()) % data.configurations.size();
+            data.resetSpecialPairs(offsetIndex);
+        }
+    }
+
+    //region debug drawing
 
     public static void resetDebug(Data data) {
         // TODO: Better debug lines
@@ -231,28 +274,31 @@ public class Simplification {
             drawDebugConvexityLines(panel, configurationList, Color.red, Color.green);
 
         if (data.drawPositiveContractions)
-            drawDebugPositiveContractions(panel, configurationList, Color.red, Color.green);
+            drawDebugPositiveContractions(panel, data, Color.red, Color.green);
         if (data.drawNegativeContractions)
-            drawDebugNegativeContractions(panel, configurationList, Color.red, Color.green);
+            drawDebugNegativeContractions(panel, data, Color.red, Color.green);
 
         if (data.drawBlockingPoints)
-            drawBlockingVectors(panel, configurationList, Color.cyan);
+            drawBlockingVectors(panel, data, Color.cyan);
     }
 
-    private static void drawBlockingVectors(DrawPanel panel, List<Configuration> list, Color color) {
+    private static void drawBlockingVectors(DrawPanel panel, SimplificationData data, Color color) {
         panel.setStroke(color, 3, Dashing.dashed(3));
         panel.setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 5);
 
-        for (var conf : list) {
-            if (conf.positiveNormalMove.hasContraction()) {
-                var blockers = conf.positiveNormalMove.getBlockingVectors();
+        for (var move : data.positiveMoves) {
+            if (move.hasContraction()) {
+                var blockers = move.getBlockingVectors();
 
-                blockers.forEach(vector -> panel.draw(new LineSegment(conf.inner.getPointAlongPerimeter(0.5), vector)));
+                blockers.forEach(vector -> panel.draw(new LineSegment(move.configuration.inner.getPointAlongPerimeter(0.5), vector)));
             }
-            if (conf.negativeNormalMove.hasContraction()) {
-                var blockers = conf.negativeNormalMove.getBlockingVectors();
+        }
 
-                blockers.forEach(vector -> panel.draw(new LineSegment(conf.inner.getPointAlongPerimeter(0.5), vector)));
+        for (var move : data.negativeMoves) {
+            if (move.hasContraction()) {
+                var blockers = move.getBlockingVectors();
+
+                blockers.forEach(vector -> panel.draw(new LineSegment(move.configuration.inner.getPointAlongPerimeter(0.5), vector)));
             }
         }
 
@@ -284,54 +330,51 @@ public class Simplification {
         data.debugLines.put(inwardsColor, inwardsDebugLines);
     }
 
-    private static void drawDebugPositiveContractions(DrawPanel panel, List<Configuration> list, Color contractionColor, Color directionColor) {
-        for (var configuration : list) {
-            if (!configuration.positiveNormalMove.hasValidContraction()) continue;
-            var contraction = configuration.positiveNormalMove.getContraction();
+    private static void drawDebugPositiveContractions(DrawPanel panel, SimplificationData data, Color contractionColor, Color directionColor) {
+        for (var move : data.positiveMoves) {
+            if (!move.hasValidContraction()) continue;
+            var contraction = move.getContraction();
             if (contraction != null) {
                 panel.setStroke(contractionColor, 3, Dashing.SOLID);
                 panel.draw(contraction);
 
-                var a = configuration.inner.getPointAlongPerimeter(0.5);
+                var a = move.configuration.inner.getPointAlongPerimeter(0.5);
                 panel.setStroke(directionColor, 3, Dashing.dashed(3));
                 panel.setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 5);
                 panel.draw(new LineSegment(a, contraction.getPointAlongPerimeter(0.5)));
                 panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
 
 //                panel.setStroke(directionColor, 3, Dashing.dashed(3));
-//                panel.draw(configuration.inner);
+//                panel.draw(move.configuration.inner);
 //
 //                panel.setStroke(extensionColor, 3, Dashing.dashed(3));
-//                panel.draw(new LineSegment(contraction.getEnd(), configuration.next.getEnd()));
-//                panel.draw(new LineSegment(contraction.getStart(), configuration.previous.getStart()));
+//                panel.draw(new LineSegment(contraction.getEnd(), move.configuration.next.getEnd()));
+//                panel.draw(new LineSegment(contraction.getStart(), move.configuration.previous.getStart()));
 
-                var area = configuration.positiveNormalMove.getArea();
+                var area = move.getArea();
                 panel.setTextStyle(TextAnchor.BASELINE_CENTER, 16);
                 panel.draw(new LineSegment(a, contraction.getPointAlongPerimeter(0.5)).getPointAlongPerimeter(0.5), String.format("%.2f", area));
-
             }
         }
     }
 
-    private static void drawDebugNegativeContractions(DrawPanel panel, List<Configuration> list, Color contractionColor, Color directionColor) {
-        for (var configuration : list) {
-            if (!configuration.negativeNormalMove.hasValidContraction()) continue;
-            var contraction = configuration.negativeNormalMove.getContraction();
+    private static void drawDebugNegativeContractions(DrawPanel panel, SimplificationData data, Color contractionColor, Color directionColor) {
+        for (var move : data.negativeMoves) {
+            if (!move.hasValidContraction()) continue;
+            var contraction = move.getContraction();
             if (contraction != null) {
                 panel.setStroke(contractionColor, 3, Dashing.SOLID);
                 panel.draw(contraction);
 
-                var a = configuration.inner.getPointAlongPerimeter(0.5);
+                var a = move.configuration.inner.getPointAlongPerimeter(0.5);
                 panel.setStroke(directionColor, 3, Dashing.dashed(3));
                 panel.setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 5);
                 panel.draw(new LineSegment(a, contraction.getPointAlongPerimeter(0.5)));
                 panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
 
-                var area = configuration.negativeNormalMove.getArea();
+                var area = move.getArea();
                 panel.setTextStyle(TextAnchor.BASELINE_CENTER, 16);
                 panel.draw(new LineSegment(a, contraction.getPointAlongPerimeter(0.5)).getPointAlongPerimeter(0.5), String.format("%.2f", area));
-
-
             }
         }
     }

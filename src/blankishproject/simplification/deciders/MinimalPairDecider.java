@@ -3,6 +3,8 @@ package blankishproject.simplification.deciders;
 import blankishproject.simplification.moves.MoveType;
 import blankishproject.simplification.Configuration;
 import blankishproject.simplification.SimplificationData;
+import blankishproject.simplification.moves.NegativeNormalMove;
+import blankishproject.simplification.moves.PositiveNormalMove;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,14 +14,14 @@ import static blankishproject.Util.undirectedEquals;
 public class MinimalPairDecider implements IDecider {
     @Override
     public List<Decision> findMoves(SimplificationData data) {
-        var configurations = data.configurations;
-        Configuration minPositive = null;
+        var positiveMoves = data.positiveMoves;
+        PositiveNormalMove minPositive = null;
         double minPositiveArea = Double.MAX_VALUE;
-        for (var configuration : configurations) {
-            if (configuration.positiveNormalMove.hasValidContraction()) {
-                var area = Math.abs(configuration.positiveNormalMove.getArea());
+        for (var move : positiveMoves) {
+            if (move.hasValidContraction()) {
+                var area = Math.abs(move.getArea());
                 if (area < minPositiveArea) {
-                    minPositive = configuration;
+                    minPositive = move;
                     minPositiveArea = area;
                 }
             }
@@ -27,13 +29,14 @@ public class MinimalPairDecider implements IDecider {
         if (minPositive == null)
             return Collections.emptyList();
 
-        Configuration minNegative = null;
+        var negativeMoves = data.negativeMoves;
+        NegativeNormalMove minNegative = null;
         double minNegativeArea = Double.MAX_VALUE;
-        for (var configuration : configurations) {
-            if (configuration.negativeNormalMove.hasValidContraction() && !doCollide(minPositive, configuration)) {
-                var area = Math.abs(configuration.negativeNormalMove.getArea());
+        for (var move : negativeMoves) {
+            if (move.hasValidContraction() && !doCollide(minPositive.configuration, move.configuration)) {
+                var area = Math.abs(move.getArea());
                 if (area < minNegativeArea) {
-                    minNegative = configuration;
+                    minNegative = move;
                     minNegativeArea = area;
                 }
             }
@@ -42,8 +45,7 @@ public class MinimalPairDecider implements IDecider {
         if (minNegative == null)
             return Collections.emptyList();
 
-        return List.of(new Decision(minPositive, MoveType.POSITIVE), new Decision(minNegative, MoveType.NEGATIVE));
-
+        return List.of(new Decision(minPositive.configuration, minPositive), new Decision(minNegative.configuration, minNegative));
     }
 
     private boolean doCollide(Configuration positive, Configuration negative) {

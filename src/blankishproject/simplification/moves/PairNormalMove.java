@@ -7,18 +7,33 @@ import blankishproject.simplification.Configuration;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.util.DoubleUtil;
 
+import java.util.HashSet;
+import java.util.List;
+
 import static blankishproject.Util.undirectedEquals;
 
 public class PairNormalMove extends Move {
 
     protected final SimplificationData data;
-    protected final Configuration configuration;
+    public final Configuration configuration;
     protected final Configuration pairedConfiguration;
     protected final NormalMove move;
     protected final NormalMove pairedMove;
 
     protected boolean isValid;
     protected double area;
+
+    public PairNormalMove(SimplificationData data, Configuration configuration, boolean invalid) {
+        this.data = data;
+        this.configuration = configuration;
+
+        this.pairedConfiguration = null;
+        this.move = null;
+        this.pairedMove = null;
+
+        this.isValid = false;
+        this.area = 0;
+    }
 
     public PairNormalMove(Configuration configuration, Configuration pairedConfiguration, NormalMove move, NormalMove pairedMove, SimplificationData data) {
         this.data = data;
@@ -56,12 +71,12 @@ public class PairNormalMove extends Move {
 
     @Override
     public void apply() {
-        var decision = new Decision(configuration, move.getType(), area, true);
+        var decision = new Decision(configuration, move, area, true);
         Simplification.applyMove(data, decision);
 
-        var pairedDecision = new Decision(pairedConfiguration, pairedMove.getType(), area, true);
+        var newPairedConfiguration = data.configurations.get(pairedConfiguration.index);
+        var pairedDecision = new Decision(newPairedConfiguration, pairedMove, area, true);
         Simplification.applyMove(data, pairedDecision);
-
     }
 
     private void calculateValidity() {
@@ -69,7 +84,7 @@ public class PairNormalMove extends Move {
         var sharedEdge = undirectedEquals(configuration.next, pairedConfiguration.previous);
 
         // The shared edge cannot be completely convex or reflex
-        var validReflexity = (configuration.isEndReflex() && pairedConfiguration.isStartConvex())
+        var validReflexivity = (configuration.isEndReflex() && pairedConfiguration.isStartConvex())
                 || (configuration.isEndConvex() && pairedConfiguration.isStartReflex());
 
         // The affected areas should be free of blocking points
@@ -77,7 +92,7 @@ public class PairNormalMove extends Move {
         var noBlocking = true;
 
         // If all these cases hold, this PairNormalMove is likely to be valid
-        isValid = sharedEdge && validReflexity && noBlocking;
+        isValid = sharedEdge && validReflexivity && noBlocking;
     }
 
     private void calculateArea() {

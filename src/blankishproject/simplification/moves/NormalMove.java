@@ -19,7 +19,7 @@ import static blankishproject.Util.undirectedEquals;
 
 public abstract class NormalMove extends Move {
 
-    protected final Configuration configuration;
+    public final Configuration configuration;
     protected final LineSegment contraction;
     protected final Vector direction;
     protected double distance;
@@ -120,7 +120,12 @@ public abstract class NormalMove extends Move {
 
         var mid = getForDistance(removeDistance);
 
-        assert DoubleUtil.close(midLength, mid.length()) : "Invalid midLength: " + midLength + " != " + mid.length();
+        assert DoubleUtil.close(midLength, mid.length()) : "Invalid midLength: " + midLength + " != " + mid.length()
+                + "\n       " + configuration.previous.getStart() + configuration.previous.getEnd() + configuration.next.getStart() + configuration.next.getEnd()
+                + "\n       " + configuration.previous.length() + " " + configuration.next.length()
+                + "\n       " + contraction
+                + "\n       " + configuration.wasInvalidated()
+                + "\n       " + configuration.inner;
 
         return mid;
     }
@@ -161,6 +166,7 @@ public abstract class NormalMove extends Move {
         apply(contraction);
     }
 
+
     //region initialization calculations
     protected abstract LineSegment calculateContraction();
 
@@ -188,8 +194,15 @@ public abstract class NormalMove extends Move {
             System.out.println("contraction = " + contraction + "[" + contraction.length() + "]");
 
         if (previousIntersection.size() == 0) {
-            System.out.println("Unexpected Geometry found for Contraction-Previous intersection:");
-            System.out.println("[No intersection found]");
+            // TODO: Investigate case
+//            System.out.println("Unexpected Geometry found for Contraction-Previous intersection:");
+//            System.out.println("[No intersection found]");
+//            System.out.println("previous = " + configuration.previous + " : " + configuration.previous.length());
+//            System.out.println("inner = " + configuration.inner + " : " + configuration.inner.length());
+//            System.out.println("next = " + configuration.next + " : " + configuration.next.length());
+//            System.out.println("angle = " + configuration.getStartAngle() / (Math.PI * 2) * 360);
+//            System.out.println("invalidated = " + configuration.wasInvalidated());
+            //assert false;
             return null;
         } else if (previousIntersection.get(0) instanceof Line) {
             contraction.setStart(configuration.previous.getStart().clone());
@@ -202,8 +215,15 @@ public abstract class NormalMove extends Move {
         }
 
         if (nextIntersection.size() == 0) {
-            System.out.println("Unexpected Geometry found for Contraction-Next intersection:");
-            System.out.println("[No intersection found]");
+            // TODO: Investigate case
+//            System.out.println("Unexpected Geometry found for Contraction-Next intersection:");
+//            System.out.println("[No intersection found]");
+//            System.out.println("previous = " + configuration.previous + " : " + configuration.previous.length());
+//            System.out.println("inner = " + configuration.inner + " : " + configuration.inner.length());
+//            System.out.println("next = " + configuration.next + " : " + configuration.next.length());
+//            System.out.println("endAngle = " + configuration.getEndAngle() / (Math.PI * 2) * 360);
+//            System.out.println("invalidated = " + configuration.wasInvalidated());
+            //assert false;
             return null;
         } else if (nextIntersection.get(0) instanceof Line) {
             contraction.setEnd(configuration.next.getEnd().clone());
