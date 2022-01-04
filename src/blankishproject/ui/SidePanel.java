@@ -14,10 +14,12 @@
 package blankishproject.ui;
 
 import blankishproject.Data;
+import blankishproject.OrientationSet;
 import nl.tue.geometrycore.geometryrendering.styling.SizeMode;
 import nl.tue.geometrycore.gui.sidepanel.SideTab;
 import nl.tue.geometrycore.gui.sidepanel.TabbedSidePanel;
 
+import javax.swing.*;
 import java.awt.*;
 
 /**
@@ -29,6 +31,7 @@ public class SidePanel extends TabbedSidePanel {
     static final Font subTitleFont = new Font(null, Font.BOLD, 14);
 
     private final Data data;
+    private final DataTab dataTab;
     private final SchematizationTab schematizationTab;
     private final SimplificationTab simplificationTab;
 
@@ -37,11 +40,15 @@ public class SidePanel extends TabbedSidePanel {
         super();
         this.data = data;
 
+        Dimension D = new Dimension(300, 100);
+        this.setMinimumSize(D);
+        this.setPreferredSize(D);
+        this.setSize(D);
+
+        dataTab = new DataTab(data, this);
         schematizationTab = new SchematizationTab(data, this);
         simplificationTab = new SimplificationTab(data, this);
     }
-
-    //region Geometry
 
     void addGeometryOptionsSection(SideTab tab) {
         tab.addLabel("Geometry Options").setFont(titleFont);
@@ -61,9 +68,17 @@ public class SidePanel extends TabbedSidePanel {
         });
     }
 
+    void addOrientationsSection(SideTab tab, OrientationSet orientations, String startText ) {
+        tab.addLabel("Geometry Options").setFont(titleFont);
+        tab.addSeparator(0);
 
+        var tf = tab.addTextField(startText);
+        tab.addButton("Set Orientations", (e) -> {
+            orientations.setFrom(tf.getText());
+            data.repaint();
+        });
 
-    //endregion Geometry
+    }
 
     @Override
     public void repaint() {
@@ -72,6 +87,7 @@ public class SidePanel extends TabbedSidePanel {
             return;
 
 
+        dataTab.repaint();
         schematizationTab.repaint();
         simplificationTab.repaint();
     }

@@ -44,6 +44,10 @@ public class DrawPanel extends GeometryPanel {
         if (data.original != null && data.original.vertexCount() > 0)
             draw(data.original);
 
+        setStroke(Color.blue, data.strokewidth, Dashing.SOLID);
+        if (data.staircase != null && data.staircase.vertexCount() > 0 && data.drawStaircase)
+            draw(data.staircase);
+
         setStroke(Color.black, data.strokewidth, Dashing.SOLID);
         if (data.schematization != null && data.schematization.vertexCount() > 0)
             draw(data.schematization);

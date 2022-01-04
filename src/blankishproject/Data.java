@@ -30,6 +30,12 @@ public class Data {
 
     public Polygon original;
 
+    public Polygon staircase;
+    public int stairSteps = 10;
+    public double staircaseSlope = 45;
+    public OrientationSet staircaseOrientations = new OrientationSet();
+    public boolean drawStaircase = true;
+
     // Schematization
     public PolyLine schematization;
     public int[] clockwiseClassifications;
@@ -72,6 +78,9 @@ public class Data {
     public Data() {
         this.draw = new DrawPanel(this);
         this.side = new SidePanel(this);
+
+        staircaseOrientations.addOrientationDegrees(0);
+        staircaseOrientations.addOrientationDegrees(90);
 
         orientations.addOrientationDegrees(0);
         orientations.addOrientationDegrees(0 + 45);
@@ -223,6 +232,24 @@ public class Data {
         Checks.uniqueVertices(this);
         Checks.noUnnecessaryVertices(this);
         Checks.no360DegreeTurns(this);
+    }
+
+    public void generateStaircase() {
+        DataGeneration.generate(this);
+        repaint();
+    }
+
+    public void setStaircaseAsInputSimplificationAlgorithm() {
+        original = staircase;
+
+        // TODO: Run checks
+        runChecks();
+
+        drawStaircase = false;
+
+        Simplification.initState(simplificationData, original);
+        Schematization.init(this);
+        repaint();
     }
 
     public void runTestCode() {

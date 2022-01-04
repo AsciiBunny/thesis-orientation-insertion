@@ -90,6 +90,17 @@ public class OrientationSet implements Iterable<OrientationSet.Orientation> {
         return orientations.size();
     }
 
+    public void setFrom(String text) {
+        this.orientations.clear();
+
+        String[] parts = text.split(",");
+        for (String part : parts) {
+            part = part.trim();
+            var orientation = Double.parseDouble(part);
+            addOrientationDegrees(orientation);
+        }
+    }
+
     class Orientation {
         private final double orientation;
         private final Vector direction;

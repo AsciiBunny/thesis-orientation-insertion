@@ -20,6 +20,8 @@ public class SchematizationTab {
 
         panel.addGeometryOptionsSection(tab);
         tab.addSpace(5);
+        panel.addOrientationsSection(tab, data.orientations, "0, 45, 90, 135");
+        tab.addSpace(5);
         addGeometryInformationSection();
         tab.addSpace(5);
         addRunningSection();
