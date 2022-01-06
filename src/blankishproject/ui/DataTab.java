@@ -24,6 +24,8 @@ public class DataTab {
         tab.addSpace(5);
         addRunningSection();
         tab.addSpace(5);
+        addTestSection();
+        tab.addSpace(5);
         addDebugDrawOptionsSection();
     }
 
@@ -56,24 +58,19 @@ public class DataTab {
         tab.addButton("Use As Input", (e -> data.setStaircaseAsInputSimplificationAlgorithm()));
     }
 
+    private void addTestSection() {
+        tab.addButton("Run Test Code [t]", (e -> data.runTestCode()));
+        tab.addButton("Debug draw", (e -> data.draw.repaint()));
+    }
+
     private void addDebugDrawOptionsSection() {
         tab.addLabel("Debug Draw Options").setFont(titleFont);
         tab.addSeparator(0);
-//
+
         drawCheckbox = tab.addCheckbox("Draw Staircase", data.drawOrientations, (e, b) -> {
             data.drawStaircase = b;
             data.draw.repaint();
         });
-//
-//        tab.addCheckbox("Draw Classifications", data.drawClassifications, (e, b) -> {
-//            data.drawClassifications = b;
-//            data.draw.repaint();
-//        });
-//
-//        tab.addCheckbox("Draw Significance", data.drawSignificance, (e, b) -> {
-//            data.drawSignificance = b;
-//            data.draw.repaint();
-//        });
     }
 
     public void repaint() {

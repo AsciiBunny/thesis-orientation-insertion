@@ -5,6 +5,8 @@ import blankishproject.GeometryList;
 import blankishproject.Util;
 import blankishproject.simplification.deciders.Decision;
 import blankishproject.simplification.deciders.IDecider;
+import blankishproject.simplification.moves.NormalMove;
+import blankishproject.simplification.moves.PairNormalMove;
 import blankishproject.ui.DrawPanel;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.curved.CircularArc;
@@ -269,7 +271,7 @@ public class Simplification {
         // TODO: Complementary moves
     }
 
-        //region debug drawing
+    //region debug drawing
 
     public static void resetDebug(Data data) {
         // TODO: Better debug lines
@@ -284,22 +286,73 @@ public class Simplification {
         if (configurationList == null)
             return;
 
-        if (data.drawConvexityArcs)
-            drawDebugConvexityArcs(panel, configurationList, Color.red, Color.green);
-        if (data.drawConvexityEdges)
-            drawDebugConvexityLines(panel, configurationList, Color.red, Color.green);
+        if (data.drawForAll) {
+            if (data.drawConvexityArcs)
+                drawDebugConvexityArcs(panel, configurationList, Color.red, Color.green);
+            if (data.drawConvexityEdges)
+                drawDebugConvexityLines(panel, configurationList, Color.red, Color.green);
 
-        if (data.drawPositiveContractions)
-            drawDebugPositiveContractions(panel, data, Color.red, Color.green);
-        if (data.drawNegativeContractions)
-            drawDebugNegativeContractions(panel, data, Color.red, Color.green);
+            if (data.drawPositiveContractions)
+                drawDebugContractions(panel, Collections.unmodifiableList(data.positiveMoves));
+            if (data.drawNegativeContractions)
+                drawDebugContractions(panel, Collections.unmodifiableList(data.negativeMoves));
 
-        if (data.drawBlockingPoints)
-            drawBlockingVectors(panel, data, Color.cyan);
+            if (data.drawPositivePairs)
+                drawDebugComplementaryMoves(panel, data.positivePairMoves);
+            if (data.drawNegativePairs)
+                drawDebugComplementaryMoves(panel, data.negativePairMoves);
+
+            if (data.drawBlockingPoints)
+                drawBlockingVectors(panel, data);
+        }
+
+
+        if (data.selectedEdge > 0) {
+            var index = data.selectedEdge;
+
+            panel.setStroke(Color.cyan, 1, Dashing.dashed(1));
+            panel.draw(data.polygon.edge(index));
+
+            if (data.drawConvexityArcs)
+                drawDebugConvexityArcs(panel, Collections.singletonList(data.configurations.get(index)), Color.red, Color.green);
+            if (data.drawConvexityEdges)
+                drawDebugConvexityLines(panel, Collections.singletonList(data.configurations.get(index)), Color.red, Color.green);
+
+            if (data.drawPositiveContractions)
+                drawDebugContractions(panel, Collections.singletonList(data.positiveMoves.get(index)));
+            if (data.drawNegativeContractions)
+                drawDebugContractions(panel, Collections.singletonList(data.negativeMoves.get(index)));
+
+            if (data.drawPositivePairs)
+                drawDebugComplementaryMoves(panel, Collections.singletonList(data.positivePairMoves.get(index)));
+            if (data.drawNegativePairs)
+                drawDebugComplementaryMoves(panel, Collections.singletonList(data.negativePairMoves.get(index)));
+
+            if (data.drawBlockingPoints) {
+                panel.setStroke(Color.cyan, 3, Dashing.dashed(3));
+                panel.setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 5);
+
+                var positiveMove = data.positiveMoves.get(index);
+                if (positiveMove.hasContraction()) {
+                    var blockers = positiveMove.getBlockingVectors();
+
+                    blockers.forEach(vector -> panel.draw(new LineSegment(positiveMove.configuration.inner.getPointAlongPerimeter(0.5), vector)));
+                }
+
+                var negativeMove = data.negativeMoves.get(index);
+                if (negativeMove.hasContraction()) {
+                    var blockers = negativeMove.getBlockingVectors();
+
+                    blockers.forEach(vector -> panel.draw(new LineSegment(negativeMove.configuration.inner.getPointAlongPerimeter(0.5), vector)));
+                }
+
+                panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
+            }
+        }
     }
 
-    private static void drawBlockingVectors(DrawPanel panel, SimplificationData data, Color color) {
-        panel.setStroke(color, 3, Dashing.dashed(3));
+    private static void drawBlockingVectors(DrawPanel panel, SimplificationData data) {
+        panel.setStroke(Color.cyan, 3, Dashing.dashed(3));
         panel.setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 5);
 
         for (var move : data.positiveMoves) {
@@ -346,52 +399,46 @@ public class Simplification {
         data.debugLines.put(inwardsColor, inwardsDebugLines);
     }
 
-    private static void drawDebugPositiveContractions(DrawPanel panel, SimplificationData data, Color contractionColor, Color directionColor) {
-        for (var move : data.positiveMoves) {
+    private static void drawDebugContractions(DrawPanel panel, List<NormalMove> moves) {
+        for (var move : moves) {
             if (!move.hasValidContraction()) continue;
             var contraction = move.getContraction();
-            if (contraction != null) {
-                panel.setStroke(contractionColor, 3, Dashing.SOLID);
-                panel.draw(contraction);
-
-                var a = move.configuration.inner.getPointAlongPerimeter(0.5);
-                panel.setStroke(directionColor, 3, Dashing.dashed(3));
-                panel.setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 5);
-                panel.draw(new LineSegment(a, contraction.getPointAlongPerimeter(0.5)));
-                panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
-
-//                panel.setStroke(directionColor, 3, Dashing.dashed(3));
-//                panel.draw(move.configuration.inner);
-//
-//                panel.setStroke(extensionColor, 3, Dashing.dashed(3));
-//                panel.draw(new LineSegment(contraction.getEnd(), move.configuration.next.getEnd()));
-//                panel.draw(new LineSegment(contraction.getStart(), move.configuration.previous.getStart()));
-
-                var area = move.getArea();
-                panel.setTextStyle(TextAnchor.BASELINE_CENTER, 16);
-                panel.draw(new LineSegment(a, contraction.getPointAlongPerimeter(0.5)).getPointAlongPerimeter(0.5), String.format("%.2f", area));
-            }
+            drawDebugContraction(panel, move, contraction, move.getArea(), Color.red, Color.green);
         }
     }
 
-    private static void drawDebugNegativeContractions(DrawPanel panel, SimplificationData data, Color contractionColor, Color directionColor) {
-        for (var move : data.negativeMoves) {
-            if (!move.hasValidContraction()) continue;
-            var contraction = move.getContraction();
-            if (contraction != null) {
-                panel.setStroke(contractionColor, 3, Dashing.SOLID);
-                panel.draw(contraction);
+    private static void drawDebugComplementaryMoves(DrawPanel panel, List<PairNormalMove> pairs) {
+        for (var pair : pairs) {
+            if (!pair.isValid()) continue;
+            var c1 = pair.move.getForArea(pair.getAffectedArea() / 2);
+            var c2 = pair.pairedMove.getForArea(pair.getAffectedArea() / 2);
+            drawDebugContraction(panel, pair.move, c1, pair.getAffectedArea() / 2, Color.magenta, Color.pink);
+            drawDebugContraction(panel, pair.pairedMove, c2, pair.getAffectedArea() / 2, Color.cyan, Color.pink);
 
-                var a = move.configuration.inner.getPointAlongPerimeter(0.5);
-                panel.setStroke(directionColor, 3, Dashing.dashed(3));
-                panel.setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 5);
-                panel.draw(new LineSegment(a, contraction.getPointAlongPerimeter(0.5)));
-                panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
+            var a1 = pair.move.configuration.inner.getPointAlongPerimeter(0.5);
+            var a2 = c1.getPointAlongPerimeter(0.5);
+            var a = new LineSegment(a1, a2).getPointAlongPerimeter(0.5);
+            var b1 = pair.pairedMove.configuration.inner.getPointAlongPerimeter(0.5);
+            var b2 = c2.getPointAlongPerimeter(0.5);
+            var b = new LineSegment(b1, b2).getPointAlongPerimeter(0.5);
+            panel.setStroke(Color.pink, 3, Dashing.dashed(1));
+            panel.draw(new LineSegment(a, b));
+        }
+    }
 
-                var area = move.getArea();
-                panel.setTextStyle(TextAnchor.BASELINE_CENTER, 16);
-                panel.draw(new LineSegment(a, contraction.getPointAlongPerimeter(0.5)).getPointAlongPerimeter(0.5), String.format("%.2f", area));
-            }
+    private static void drawDebugContraction(DrawPanel panel, NormalMove move, LineSegment contraction, double area, Color moveColor, Color directionColor) {
+        if (contraction != null) {
+            panel.setStroke(moveColor, 3, Dashing.SOLID);
+            panel.draw(contraction);
+
+            var a = move.configuration.inner.getPointAlongPerimeter(0.5);
+            panel.setStroke(directionColor, 3, Dashing.dashed(3));
+            panel.setForwardArrowStyle(ArrowStyle.TRIANGLE_SOLID, 5);
+            panel.draw(new LineSegment(a, contraction.getPointAlongPerimeter(0.5)));
+            panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
+
+            panel.setTextStyle(TextAnchor.BASELINE_CENTER, 16);
+            panel.draw(new LineSegment(a, contraction.getPointAlongPerimeter(0.5)).getPointAlongPerimeter(0.5), String.format("%.2f", area));
         }
     }
 

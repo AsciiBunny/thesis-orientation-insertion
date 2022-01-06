@@ -16,9 +16,9 @@ public class PairNormalMove extends Move {
 
     protected final SimplificationData data;
     public final Configuration configuration;
-    protected final Configuration pairedConfiguration;
-    protected final NormalMove move;
-    protected final NormalMove pairedMove;
+    public final Configuration pairedConfiguration;
+    public final NormalMove move;
+    public final NormalMove pairedMove;
 
     protected boolean isValid;
     protected double area;
@@ -60,12 +60,12 @@ public class PairNormalMove extends Move {
 
     @Override
     public double getAffectedArea() {
-        return area;
+        return area * 2;
     }
 
     @Override
     public void applyForArea(double area) {
-        assert DoubleUtil.close(area, this.area) : "Cannot partially apply PairMove: " + area + " != " + this.area;
+        assert DoubleUtil.close(area, this.area * 2) : "Cannot partially apply PairMove: " + area + " != " + this.area * 2;
         apply();
     }
 

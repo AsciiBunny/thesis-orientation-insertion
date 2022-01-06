@@ -87,17 +87,11 @@ public class SimplificationTab {
             kButton.setText("Run until " + k + " left");
         });
 
-        tab.addSpace(3);
-
-        tab.addButton("Run Test Code [t]", (e -> data.runTestCode()));
-
         tab.addButton("Reset State", (e -> {
             Simplification.initState(data.simplificationData, data.simplificationData.polygon);
             data.draw.repaint();
             this.repaint();
         }));
-
-        tab.addButton("Debug draw", (e -> data.draw.repaint()));
     }
 
     private void addSimplificationOptionsSection(SideTab tab) {
@@ -143,6 +137,13 @@ public class SimplificationTab {
 
         var sData = data.simplificationData;
 
+        tab.addCheckbox("Draw For All Edges", sData.drawForAll, (e, b) -> {
+            sData.drawForAll = b;
+            data.draw.repaint();
+        });
+
+        tab.addSpace(3);
+
         tab.addCheckbox("Draw Convexity Arcs", sData.drawConvexityArcs, (e, b) -> {
             sData.drawConvexityArcs = b;
             data.draw.repaint();
@@ -163,10 +164,22 @@ public class SimplificationTab {
             data.draw.repaint();
         });
 
+        tab.addCheckbox("Draw Positive Pairs", sData.drawPositivePairs, (e, b) -> {
+            sData.drawPositivePairs = b;
+            data.draw.repaint();
+        });
+
+        tab.addCheckbox("Draw Negative Pairs", sData.drawNegativePairs, (e, b) -> {
+            sData.drawNegativePairs = b;
+            data.draw.repaint();
+        });
+
         tab.addCheckbox("Draw Blocking Points", sData.drawBlockingPoints, (e, b) -> {
             sData.drawBlockingPoints = b;
             data.draw.repaint();
         });
+
+        tab.addSpace(3);
 
         tab.addCheckbox("Draw Inner Difference", sData.drawInnerDifference, (e, b) -> {
             sData.drawInnerDifference = b;

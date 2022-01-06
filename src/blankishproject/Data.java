@@ -89,13 +89,26 @@ public class Data {
     }
 
     public void select(Vector loc, double distance) {
-//        selected = null;
-//        for (BaseGeometry g : geometries) {
-//            if (g.distanceTo(loc) < distance) {
-//                selected = g;
-//            }
-//        }
-//        repaint();
+        var polygon = simplificationData.polygon;
+        if (polygon.distanceTo(loc) < distance) {
+            int closest = -1;
+            var closestDistance = Double.MAX_VALUE;
+            for (int i = 0; i < polygon.edgeCount(); i++) {
+                var edge = polygon.edge(i);
+                if (edge.distanceTo(loc) < closestDistance) {
+                    closestDistance = edge.distanceTo(loc);
+                    closest = i;
+                }
+            }
+
+            if (closest >= 0){
+                simplificationData.selectedEdge = closest;
+            }
+        } else {
+            simplificationData.selectedEdge = -1;
+        }
+
+        repaint();
     }
 
     public void pasteIPE() {
@@ -236,6 +249,7 @@ public class Data {
 
     public void generateStaircase() {
         DataGeneration.generate(this);
+        drawStaircase = true;
         repaint();
     }
 

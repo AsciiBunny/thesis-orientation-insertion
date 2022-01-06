@@ -22,10 +22,15 @@ public class SimplificationData {
     public String deciderType = "4. Minimal Complementary Pair";
 
     // region Debug Drawing Settings
+    public int selectedEdge = -1;
+
+    public boolean drawForAll = false;
     public boolean drawConvexityArcs = false;
     public boolean drawConvexityEdges = false;
     public boolean drawPositiveContractions = false;
     public boolean drawNegativeContractions = false;
+    public boolean drawPositivePairs = false;
+    public boolean drawNegativePairs = false;
     public boolean drawBlockingPoints = false;
 
     public boolean drawInnerDifference = false;

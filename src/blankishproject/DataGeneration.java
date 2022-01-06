@@ -35,6 +35,7 @@ public class DataGeneration {
         var associatedStep = Vector.multiply(stepSize * ratios[1], associated);
 
 
+        points.add(start.clone());
         var now = start.clone();
         for (int i = 0; i < data.stairSteps; i++) {
             buildStep(points, now, assignedStep, associatedStep);
@@ -42,7 +43,9 @@ public class DataGeneration {
         }
         points.add(now);
 
-        points.add(corner);
+        points.add(new Vector(now.getX(),corner.getY() - 10 * sideLength));
+        points.add(new Vector(corner.getX() - 10 * sideLength,corner.getY() - 10 * sideLength));
+        points.add(new Vector(corner.getX() - 10 * sideLength,corner.getY() + sideLength));
 
         data.staircase = new Polygon(points);
     }
