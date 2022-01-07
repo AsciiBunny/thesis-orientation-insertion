@@ -3,6 +3,7 @@ package blankishproject.simplification;
 import blankishproject.simplification.moves.NegativeNormalMove;
 import blankishproject.simplification.moves.PairNormalMove;
 import blankishproject.simplification.moves.PositiveNormalMove;
+import blankishproject.ui.ProgressDialog;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 
@@ -21,6 +22,8 @@ public class SimplificationData {
 
     public String deciderType = "4. Minimal Complementary Pair";
 
+    private ProgressDialog dialog;
+
     // region Debug Drawing Settings
     public int selectedEdge = -1;
 
@@ -38,11 +41,15 @@ public class SimplificationData {
     // endregions Debug Drawing Settings
 
     public SimplificationData(Polygon polygon) {
-        init(polygon);
+        init(polygon, null);
     }
 
-    public void init(Polygon polygon) {
+    public void init(Polygon polygon, ProgressDialog dialog) {
         this.polygon = polygon;
+
+        this.dialog = dialog;
+        if (dialog != null)
+            dialog.setMaxProgress(polygon.vertexCount() * 4);
 
         configurations = initConfigurations();
 
@@ -50,6 +57,7 @@ public class SimplificationData {
         negativeMoves = initNegativeMoves();
 
         initAllSpecialPairs();
+        this.dialog = null;
     }
 
     public Vector removeAtIndex(int index) {
@@ -76,6 +84,8 @@ public class SimplificationData {
         var list = new ArrayList<Configuration>(polygon.vertexCount());
         for (int index = 0; index < polygon.vertexCount(); index++) {
             list.add(new Configuration(polygon, index));
+            if (dialog != null)
+                dialog.increaseProgress(1);
         }
         return list;
     }
@@ -84,6 +94,8 @@ public class SimplificationData {
         var list = new ArrayList<PositiveNormalMove>(polygon.vertexCount());
         for (int index = 0; index < polygon.vertexCount(); index++) {
             list.add(new PositiveNormalMove(configurations.get(index), polygon));
+            if (dialog != null)
+                dialog.increaseProgress(1);
         }
         return list;
     }
@@ -92,6 +104,8 @@ public class SimplificationData {
         var list = new ArrayList<NegativeNormalMove>(polygon.vertexCount());
         for (int index = 0; index < polygon.vertexCount(); index++) {
             list.add(new NegativeNormalMove(configurations.get(index), polygon));
+            if (dialog != null)
+                dialog.increaseProgress(1);
         }
         return list;
     }
@@ -103,6 +117,8 @@ public class SimplificationData {
 
         for (int index = 0; index < polygon.vertexCount(); index++) {
             initSpecialPairs(index);
+            if (dialog != null)
+                dialog.increaseProgress(1);
         }
     }
 

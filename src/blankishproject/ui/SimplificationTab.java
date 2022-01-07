@@ -88,7 +88,7 @@ public class SimplificationTab {
         });
 
         tab.addButton("Reset State", (e -> {
-            Simplification.initState(data.simplificationData, data.simplificationData.polygon);
+            data.initState();
             data.draw.repaint();
             this.repaint();
         }));

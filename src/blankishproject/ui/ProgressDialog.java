@@ -9,16 +9,15 @@ import java.awt.event.WindowEvent;
 
 public class ProgressDialog {
 
-    private final Data data;
-
     private JDialog dialog;
     private JProgressBar progressBar;
     private JLabel label;
-    private Thread dialogThread;
 
-    public ProgressDialog(JFrame frame, Data data) {
-        this.data = data;
+    private int maxProgress = 500;
+    private int progress = 0;
+    public boolean canceled;
 
+    public ProgressDialog(JFrame frame) {
         setupJDialog(frame);
     }
 
@@ -39,15 +38,15 @@ public class ProgressDialog {
         dialog.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                data.canceled = true;
+                canceled = true;
             };
         });
     }
 
     public void show() {
-        progressBar.setMaximum(data.maxProgress);
+        progressBar.setMaximum(maxProgress);
         progressBar.setValue(0);
-        dialogThread = new Thread(() -> {
+        Thread dialogThread = new Thread(() -> {
             dialog.setVisible(true);
         });
         dialogThread.start();
@@ -58,8 +57,22 @@ public class ProgressDialog {
     }
 
     public void update() {
-        progressBar.setValue(data.progress);
-        label.setText("Progress: " + data.progress + "/" + data.maxProgress);
+        progressBar.setValue(progress);
+        label.setText("Progress: " + progress + "/" + maxProgress);
         progressBar.repaint();
+    }
+
+    public void setProgress(int progress) {
+        this.progress = progress;
+        update();
+    }
+
+    public void increaseProgress(int increase) {
+        setProgress(progress + increase);
+    }
+
+    public void setMaxProgress(int maxProgress) {
+        this.maxProgress = maxProgress;
+        progressBar.setMaximum(maxProgress);
     }
 }

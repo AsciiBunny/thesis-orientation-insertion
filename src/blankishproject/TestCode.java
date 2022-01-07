@@ -18,10 +18,10 @@ public class TestCode {
     public static void run(Data data) {
         var polygon = data.original;
         var areaBefore = polygon.areaUnsigned();
-        rotateEdgeAroundFirst(polygon, 6, getDirectionFromDegrees(135));
+        rotateEdgeAroundMiddle(polygon, 6, getDirectionFromDegrees(135));
         System.out.println(areaBefore + " -> " + polygon.areaUnsigned());
 
-        Simplification.initState(data.simplificationData, data.original);
+        Simplification.initState(data.simplificationData, data.original, data.dialog);
     }
 
     public static void rotateEdgeAroundMiddle(Polygon polygon, int index, Vector orientation) {

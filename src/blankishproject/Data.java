@@ -25,8 +25,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Data {
-    // geometries to draw
-    //public List<BaseGeometry> geometries = new ArrayList<>();
 
     public Polygon original;
 
@@ -65,10 +63,6 @@ public class Data {
     public boolean drawOrientations = false;
     public boolean drawClassifications = false;
     public boolean drawSignificance = false;
-
-    public int progress = 0;
-    public int maxProgress = 0;
-    public boolean canceled = false;
 
     // keep these last
     public DrawPanel draw;
@@ -115,17 +109,13 @@ public class Data {
         try (IPEReader read = IPEReader.clipboardReader()) {
             List<ReadItem> items = read.read();
             for (ReadItem i : items) {
-                //geometries.add(i.toGeometry());
                 if (i.toGeometry() instanceof Polygon) {
                     original = (Polygon) i.toGeometry();
 
-                    // TODO: Run checks
-                    runChecks();
-
-                    Schematization.init(this);
-                    Simplification.initState(simplificationData, original);
+                    initState();
 
                     draw.zoomToFit();
+                    break;
                 }
             }
 
@@ -150,7 +140,7 @@ public class Data {
         //geometries.clear();
         original = new Polygon();
         schematization = new PolyLine();
-        simplificationData.init(new Polygon());
+        simplificationData.init(new Polygon(), null);
 
         Schematization.resetDebug(this);
 
@@ -169,9 +159,9 @@ public class Data {
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() {
-                maxProgress = cycles;
+                dialog.setMaxProgress(cycles);
                 dialog.show();
-                Simplification.run(Data.this, cycles);
+                Simplification.run(Data.this, cycles, dialog);
                 return null;
             }
 
@@ -187,9 +177,9 @@ public class Data {
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() {
-                maxProgress = simplificationData.polygon.vertexCount() - K;
+                dialog.setMaxProgress(simplificationData.polygon.vertexCount() - K);
                 dialog.show();
-                Simplification.runUntilLeft(Data.this, K);
+                Simplification.runUntilLeft(Data.this, K, dialog);
                 return null;
             }
 
@@ -205,9 +195,9 @@ public class Data {
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() {
-                maxProgress = simplificationData.polygon.vertexCount();
+                dialog.setMaxProgress(simplificationData.polygon.vertexCount());
                 dialog.show();
-                Simplification.finish(Data.this);
+                Simplification.finish(Data.this, dialog);
                 return null;
             }
 
@@ -221,13 +211,34 @@ public class Data {
 
     public void setAsInputSimplificationAlgorithm() {
         original = Util.finishPolyLine(schematization);
+        initState();
+    }
 
-        // TODO: Run checks
+    public void setStaircaseAsInputSimplificationAlgorithm() {
+        original = staircase;
+        drawStaircase = false;
+        initState();
+    }
+
+    public void initState() {
         runChecks();
 
-        Simplification.initState(simplificationData, original);
-        Schematization.init(this);
-        repaint();
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() {
+                dialog.setMaxProgress(simplificationData.polygon.vertexCount() * 4);
+                dialog.show();
+                Simplification.initState(simplificationData, original, dialog);
+                Schematization.init(Data.this);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                dialog.stop();
+                repaint();
+            }
+        }.execute();
     }
 
     public void runSchematizationAlgorithm() {
@@ -250,19 +261,6 @@ public class Data {
     public void generateStaircase() {
         DataGeneration.generate(this);
         drawStaircase = true;
-        repaint();
-    }
-
-    public void setStaircaseAsInputSimplificationAlgorithm() {
-        original = staircase;
-
-        // TODO: Run checks
-        runChecks();
-
-        drawStaircase = false;
-
-        Simplification.initState(simplificationData, original);
-        Schematization.init(this);
         repaint();
     }
 

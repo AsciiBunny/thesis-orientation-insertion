@@ -8,6 +8,7 @@ import blankishproject.simplification.deciders.IDecider;
 import blankishproject.simplification.moves.NormalMove;
 import blankishproject.simplification.moves.PairNormalMove;
 import blankishproject.ui.DrawPanel;
+import blankishproject.ui.ProgressDialog;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.curved.CircularArc;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
@@ -45,8 +46,8 @@ public class Simplification {
         totalTimeTaken = lastCycleTimeTaken = 0;
     }
 
-    public static void initState(SimplificationData data, Polygon polygon) {
-        data.init(polygon.clone());
+    public static void initState(SimplificationData data, Polygon polygon, ProgressDialog dialog) {
+        data.init(polygon.clone(), dialog);
     }
 
     public static void run(Data data) {
@@ -56,12 +57,12 @@ public class Simplification {
         data.outerDifference = Util.calculateSymmetricDifference(data.original, data.simplificationData.polygon);
     }
 
-    public static void run(Data data, int cycles) {
+    public static void run(Data data, int cycles, ProgressDialog dialog) {
         var polygon = data.simplificationData.polygon;
         var before = polygon.vertexCount();
-        data.canceled = false;
+        dialog.canceled = false;
         for (int cycle = 0; cycle < cycles; cycle++) {
-            if (data.canceled) break;
+            if (dialog.canceled) break;
             var done = !iteration(data.simplificationData);
 
             var after = polygon.vertexCount();
@@ -72,8 +73,7 @@ public class Simplification {
 
             before = after;
 
-            data.progress = cycle;
-            data.dialog.update();
+            data.dialog.setProgress(cycle);
 
             if (done) break;
         }
@@ -82,12 +82,13 @@ public class Simplification {
         data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
     }
 
-    public static void runUntilLeft(Data data, int left) {
+    public static void runUntilLeft(Data data, int left, ProgressDialog dialog) {
         var polygon = data.simplificationData.polygon;
+        var beforeTotal = polygon.vertexCount();
         var before = polygon.vertexCount();
-        data.canceled = false;
+        dialog.canceled = false;
         while (before > left) {
-            if (data.canceled) break;
+            if (dialog.canceled) break;
 
             var done = !iteration(data.simplificationData);
 
@@ -97,8 +98,7 @@ public class Simplification {
             else
                 System.out.println("Removed 0 vertices");
 
-            data.progress = data.maxProgress - after + left;
-            data.dialog.update();
+            data.dialog.setProgress(beforeTotal - after + left);
             before = after;
 
             if (done) break;
@@ -108,8 +108,8 @@ public class Simplification {
         data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
     }
 
-    public static void finish(Data data) {
-        runUntilLeft(data, 0);
+    public static void finish(Data data, ProgressDialog dialog) {
+        runUntilLeft(data, 0, dialog);
     }
 
     public static boolean timedIteration(SimplificationData data) {

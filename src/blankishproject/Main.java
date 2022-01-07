@@ -28,7 +28,7 @@ public class Main {
     public static void main(String[] args) {
         Data data = new Data();
         var frame = GUIUtil.makeMainFrame("Polygon Simplification", data.draw, data.side);
-        data.dialog = new ProgressDialog(frame, data);
+        data.dialog = new ProgressDialog(frame);
     }
 
 }
