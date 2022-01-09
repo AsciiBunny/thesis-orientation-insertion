@@ -53,8 +53,7 @@ public class Simplification {
     public static void run(Data data) {
         timedIteration(data.simplificationData);
 
-        data.innerDifference = Util.calculateSymmetricDifference(data.simplificationData.polygon, data.original);
-        data.outerDifference = Util.calculateSymmetricDifference(data.original, data.simplificationData.polygon);
+        calculateSymmetricDifference(data, data.simplificationData.polygon);
     }
 
     public static void run(Data data, int cycles, ProgressDialog dialog) {
@@ -78,8 +77,7 @@ public class Simplification {
             if (done) break;
         }
 
-        data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
-        data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
+        calculateSymmetricDifference(data, polygon);
     }
 
     public static void runUntilLeft(Data data, int left, ProgressDialog dialog) {
@@ -104,8 +102,7 @@ public class Simplification {
             if (done) break;
         }
 
-        data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
-        data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
+        calculateSymmetricDifference(data, polygon);
     }
 
     public static void finish(Data data, ProgressDialog dialog) {
@@ -114,20 +111,16 @@ public class Simplification {
 
     public static boolean timedIteration(SimplificationData data) {
         long start = System.currentTimeMillis();
-        var madeChanged = iteration(data);
+        var madeChanges = iteration(data);
         long end = System.currentTimeMillis();
         long duration = end - start;
         totalTimeTaken += duration;
         lastCycleTimeTaken = duration;
-        return madeChanged;
+        return madeChanges;
     }
 
     public static boolean iteration(SimplificationData data) {
         // TODO: Better debug lines
-        // Reset debug lines
-//        resetDebug(data);
-//        data.debugLines.put(Color.blue, new GeometryList<>());
-//        data.debugArrows.put(Color.blue, new GeometryList<>());
 
         // Find moves
         var moves = new ArrayList<>(IDecider.deciders.get(data.deciderType).findMoves(data));
@@ -145,15 +138,6 @@ public class Simplification {
             applyMove(data, move);
         }
 
-
-        //data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
-        //data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
-
-//        var inner = data.innerDifference.stream().mapToDouble(Polygon::areaUnsigned).sum();
-//        var outer = data.outerDifference.stream().mapToDouble(Polygon::areaUnsigned).sum();
-//        System.out.println("innerDifference = " + inner);
-//        System.out.println("outerDifference = " + outer);
-
         return madeChanges;
     }
 
@@ -165,18 +149,9 @@ public class Simplification {
         lastCycleAreaEffected += decision.removeArea;
 
         // TODO: Better debug lines
-        //data.debugArrows.get(Color.blue).add(configuration.inner.clone());
-
 
         decision.move.applyForArea(decision.removeArea);
-        //List<Integer> removed = decision.requiresCleanup ? decision.configuration.moveCleanup() : Collections.emptyList();
         if (!decision.requiresCleanup) return;
-        //System.out.println("removed = " + removed);
-
-        //data.debugLines.get(Color.blue).add(configuration.inner.clone());
-
-        //totalVerticesRemoved += removed.size();
-        //lastCycleVerticesRemoved += removed.size();
 
 
         // Collect affected configurations around moved edge
@@ -186,10 +161,8 @@ public class Simplification {
             affectedIndexes.add(index);
         }
 
-
         // Sort indexes backwards so indexed removals work correctly
         affectedIndexes.sort(Collections.reverseOrder());
-
 
         // TODO: Keep track of removed vertices
         // TODO: COMMENT THIS
@@ -235,12 +208,12 @@ public class Simplification {
 
         // region asserts
         // Check if clean up left all indices correct
-        for (int i = 0; i < data.configurations.size(); i++) {
-            var configuration = data.configurations.get(i);
-
-            assert configuration.index == i : configuration.index + " != " + i + " for config: " + configuration;
-            assert !configuration.wasInvalidated();
-        }
+//        for (int i = 0; i < data.configurations.size(); i++) {
+//            var configuration = data.configurations.get(i);
+//
+//            assert configuration.index == i : configuration.index + " != " + i + " for config: " + configuration;
+//            assert !configuration.wasInvalidated();
+//        }
 
         assert data.polygon.vertices().size() == data.configurations.size() : data.polygon.vertices().size() + " != " + data.configurations.size();
         assert data.polygon.vertices().size() == data.positiveMoves.size() : data.polygon.vertices().size() + " != " + data.positiveMoves.size();
@@ -268,7 +241,18 @@ public class Simplification {
     private static void updateBlockingNumbers(SimplificationData data, ArrayList<Vector> removed) {
         data.positiveMoves.forEach(move -> move.updateBlockingVectors(removed));
         data.negativeMoves.forEach(move -> move.updateBlockingVectors(removed));
-        // TODO: Complementary moves
+        data.positivePairMoves.forEach(move -> move.updateBlockingVectors(removed));
+        data.negativePairMoves.forEach(move -> move.updateBlockingVectors(removed));
+    }
+
+    private static void calculateSymmetricDifference(Data data, Polygon polygon) {
+        data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
+        data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
+
+        var inner = data.innerDifference.stream().mapToDouble(Polygon::areaUnsigned).sum();
+        var outer = data.outerDifference.stream().mapToDouble(Polygon::areaUnsigned).sum();
+        System.out.println("innerDifference = " + inner);
+        System.out.println("outerDifference = " + outer);
     }
 
     //region debug drawing

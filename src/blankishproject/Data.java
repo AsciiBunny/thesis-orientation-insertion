@@ -227,6 +227,7 @@ public class Data {
             @Override
             protected Void doInBackground() {
                 dialog.setMaxProgress(simplificationData.polygon.vertexCount() * 4);
+                dialog.setProgress(0);
                 dialog.show();
                 Simplification.initState(simplificationData, original, dialog);
                 Schematization.init(Data.this);

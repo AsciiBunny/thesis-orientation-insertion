@@ -32,7 +32,7 @@ public abstract class NormalMove extends Move {
         this.direction = calculateDirection();
         this.contraction = calculateContraction();
 
-        this.blockingVectors = calculateBlockingVectors(polygon);
+        this.blockingVectors = calculateBlockingVectors(polygon, contraction);
     }
 
     @Override
@@ -272,8 +272,8 @@ public abstract class NormalMove extends Move {
      * Find all blocking vectors for this contraction.
      * <br> Complexity O(n)
      */
-    protected List<Vector> calculateBlockingVectors(Polygon polygon) {
-        if (contraction == null)
+    protected List<Vector> calculateBlockingVectors(Polygon polygon, LineSegment outer) {
+        if (outer == null)
             return new ArrayList<>();
 
         var previous = configuration.previous;
@@ -281,9 +281,8 @@ public abstract class NormalMove extends Move {
         var next = configuration.next;
 
         var boundary = Arrays.asList(previous.getStart(), inner.getStart(), next.getStart(), next.getEnd());
-        var contractionArea = new Polygon(inner.getStart(), inner.getEnd(), contraction.getEnd(), contraction.getStart());
+        var contractionArea = new Polygon(inner.getStart(), inner.getEnd(), outer.getEnd(), outer.getStart());
 
-        //var vertices = polygon.vertices().stream().filter(vector -> (contractionArea.onBoundary(vector) || contractionArea.contains(vector))&& !boundary.contains(vector)).collect(Collectors.toList());
         var vertices = new ArrayList<Vector>();
         polygon.edges().forEach(edge -> {
             if (undirectedEquals(edge, previous) || undirectedEquals(edge, inner) || undirectedEquals(edge, next))
@@ -303,7 +302,7 @@ public abstract class NormalMove extends Move {
 
         return vertices.stream().filter(vector -> boundary.stream().noneMatch(bound -> bound.isApproximately(vector))).collect(Collectors.toList());
     }
-    //endregion
+    //endregion initialization calculations
 
     public void updateBlockingVectors(List<Vector> removed) {
         if (!this.hasContraction()) return;

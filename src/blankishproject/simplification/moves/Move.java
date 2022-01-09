@@ -1,7 +1,5 @@
 package blankishproject.simplification.moves;
 
-import java.util.List;
-
 public abstract class Move {
 
     public abstract MoveType getType();

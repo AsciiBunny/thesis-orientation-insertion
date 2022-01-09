@@ -1,14 +1,16 @@
 package blankishproject.simplification.moves;
 
-import blankishproject.simplification.Simplification;
-import blankishproject.simplification.deciders.Decision;
-import blankishproject.simplification.SimplificationData;
 import blankishproject.simplification.Configuration;
+import blankishproject.simplification.Simplification;
+import blankishproject.simplification.SimplificationData;
+import blankishproject.simplification.deciders.Decision;
 import nl.tue.geometrycore.geometry.Vector;
+import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.util.DoubleUtil;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static blankishproject.Util.undirectedEquals;
 
@@ -23,6 +25,8 @@ public class PairNormalMove extends Move {
     protected boolean isValid;
     protected double area;
 
+    protected List<Vector> blockingVectors;
+
     public PairNormalMove(SimplificationData data, Configuration configuration, boolean invalid) {
         this.data = data;
         this.configuration = configuration;
@@ -33,6 +37,7 @@ public class PairNormalMove extends Move {
 
         this.isValid = false;
         this.area = 0;
+        this.blockingVectors = Collections.emptyList();
     }
 
     public PairNormalMove(Configuration configuration, Configuration pairedConfiguration, NormalMove move, NormalMove pairedMove, SimplificationData data) {
@@ -42,10 +47,12 @@ public class PairNormalMove extends Move {
         this.move = move;
         this.pairedMove = pairedMove;
 
-        calculateValidity();
-        if (isValid) {
+        this.isValid = calculateValidity();
+        if (isValid)
             calculateArea();
-        }
+        // calculateArea can invalidate
+        if (isValid && area > 0)
+            this.blockingVectors = calculateBlockingVectors(data.polygon);
     }
 
 
@@ -55,7 +62,7 @@ public class PairNormalMove extends Move {
     }
 
     public boolean isValid() {
-        return isValid;
+        return isValid && blockingVectors.size() == 0;
     }
 
     @Override
@@ -79,7 +86,7 @@ public class PairNormalMove extends Move {
         Simplification.applyMove(data, pairedDecision);
     }
 
-    private void calculateValidity() {
+    private boolean calculateValidity() {
         // The two configurations should share an edge
         var sharedEdge = undirectedEquals(configuration.next, pairedConfiguration.previous);
 
@@ -87,12 +94,8 @@ public class PairNormalMove extends Move {
         var validReflexivity = (configuration.isEndReflex() && pairedConfiguration.isStartConvex())
                 || (configuration.isEndConvex() && pairedConfiguration.isStartReflex());
 
-        // The affected areas should be free of blocking points
-        // TODO: calculate blocking numbers for expected areas
-        var noBlocking = true;
-
         // If all these cases hold, this PairNormalMove is likely to be valid
-        isValid = sharedEdge && validReflexivity && noBlocking;
+        return sharedEdge && validReflexivity;
     }
 
     private void calculateArea() {
@@ -122,7 +125,6 @@ public class PairNormalMove extends Move {
         var c = -angle2 * angle2 * sharedLength * sharedLength * ratio2 - 2 * angle2 * innerLength2 * sharedLength;
 
         var distance = DoubleUtil.solveQuadraticEquationForSmallestPositive(a, b, c, DoubleUtil.EPS);
-        var pairedDistance = sharedLength - distance;
 
         //assert distance > 0 && distance < sharedLength : distance + " not in <0.0 , " + sharedLength + ">";
         //assert pairedDistance > 0 && pairedDistance < sharedLength : pairedDistance + " not in <0.0 ," + sharedLength + ">";
@@ -149,4 +151,42 @@ public class PairNormalMove extends Move {
         }
 
     }
+    //endregion
+
+    //region Blocking Vectors
+
+    /**
+     * Find all blocking vectors for this contraction.
+     * <br> Complexity O(n)
+     */
+    protected List<Vector> calculateBlockingVectors(Polygon polygon) {
+        var vectors = move.calculateBlockingVectors(polygon, move.getForArea(area));
+        vectors.addAll(pairedMove.calculateBlockingVectors(polygon, pairedMove.getForArea(area)));
+        return vectors;
+    }
+
+    public void updateBlockingVectors(List<Vector> removed) {
+        if (!this.isValid) return;
+
+        blockingVectors.removeAll(removed);
+
+        var before = blockingVectors.size();
+
+        var outer = move.getForArea(area);
+        var contractionArea = new Polygon(configuration.inner.getStart(), configuration.inner.getEnd(), outer.getEnd(), outer.getStart());
+        blockingVectors = blockingVectors.stream().filter(contractionArea::contains).collect(Collectors.toList());
+
+        var pairedOuter = move.getForArea(area);
+        var pairedContractionArea = new Polygon(pairedConfiguration.inner.getStart(), pairedConfiguration.inner.getEnd(), pairedOuter.getEnd(), pairedOuter.getStart());
+        blockingVectors = blockingVectors.stream().filter(pairedContractionArea::contains).collect(Collectors.toList());
+
+        // TODO: Points can get moved into this area.
+        // TODO: check how points are calculated, if not saving actual vectors this might not work.
+
+        if (blockingVectors.size() != before)
+            System.out.println("Removed " + (before - blockingVectors.size()) + " blocking vertices");
+
+    }
+    //endregion Blocking Vectors
+
 }
