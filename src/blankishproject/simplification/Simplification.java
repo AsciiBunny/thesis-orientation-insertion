@@ -21,10 +21,11 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Simplification {
 
-    private static final int affectedRange = 4;
+    private static final int affectedRange = 3;
 
 
     public static int totalVerticesRemoved = 0;
@@ -166,29 +167,33 @@ public class Simplification {
 
         // TODO: Keep track of removed vertices
         // TODO: COMMENT THIS
-        var removed = new ArrayList<Vector>();
+        var removed = new ArrayList<LineSegment>();
         var left = validityCheck(data, affectedIndexes, removed);
         for (var index : left) {
             var configuration = new Configuration(data.polygon, index);
             data.configurations.set(index, configuration);
         }
+
+        // collect changed edges
+        var changed = left.stream().map(index -> data.polygon.edge(index)).collect(Collectors.toList());
+
         // Second cleanup for straight-lines that popup after 0-lengths are removed
         left = validityCheck(data, left, removed);
 
         resetIndices(data, left);
 
         //TODO: Blocking numbers
-        updateBlockingNumbers(data, removed);
+        updateBlockingNumbers(data, removed, changed);
     }
 
-    private static List<Integer> validityCheck(SimplificationData data, List<Integer> affected, List<Vector> removed) {
+    private static List<Integer> validityCheck(SimplificationData data, List<Integer> affected, List<LineSegment> removed) {
         var leftIndexes = new ArrayList<Integer>(affectedRange * 2 + 1);
         for (var index : affected) {
             var configuration = data.configurations.get(index);
 
             if (configuration.wasInvalidated()) {
-                var vector = data.removeAtIndex(index);
-                removed.add(vector);
+                var edge = data.removeAtIndex(index);
+                removed.add(edge);
                 // Update indexes in configurations
                 data.configurations.forEach(c -> {
                     if (index < c.index) {
@@ -238,11 +243,11 @@ public class Simplification {
         }
     }
 
-    private static void updateBlockingNumbers(SimplificationData data, ArrayList<Vector> removed) {
-        data.positiveMoves.forEach(move -> move.updateBlockingVectors(removed));
-        data.negativeMoves.forEach(move -> move.updateBlockingVectors(removed));
-        data.positivePairMoves.forEach(move -> move.updateBlockingVectors(removed));
-        data.negativePairMoves.forEach(move -> move.updateBlockingVectors(removed));
+    private static void updateBlockingNumbers(SimplificationData data, List<LineSegment> removed, List<LineSegment> changed) {
+        data.positiveMoves.forEach(move -> move.updateBlockingVectors(removed, changed));
+        data.negativeMoves.forEach(move -> move.updateBlockingVectors(removed, changed));
+        data.positivePairMoves.forEach(move -> move.updateBlockingVectors(removed, changed));
+        data.negativePairMoves.forEach(move -> move.updateBlockingVectors(removed, changed));
     }
 
     private static void calculateSymmetricDifference(Data data, Polygon polygon) {
@@ -318,16 +323,20 @@ public class Simplification {
 
                 var positiveMove = data.positiveMoves.get(index);
                 if (positiveMove.hasContraction()) {
-                    var blockers = positiveMove.getBlockingVectors();
+                    var blockers = positiveMove.getBlockingEdges();
 
-                    blockers.forEach(vector -> panel.draw(new LineSegment(positiveMove.configuration.inner.getPointAlongPerimeter(0.5), vector)));
+                    blockers.forEach(edge -> panel.draw(new LineSegment(
+                            positiveMove.configuration.inner.getPointAlongPerimeter(0.5),
+                            edge.getPointAlongPerimeter(0.5))));
                 }
 
                 var negativeMove = data.negativeMoves.get(index);
                 if (negativeMove.hasContraction()) {
-                    var blockers = negativeMove.getBlockingVectors();
+                    var blockers = negativeMove.getBlockingEdges();
 
-                    blockers.forEach(vector -> panel.draw(new LineSegment(negativeMove.configuration.inner.getPointAlongPerimeter(0.5), vector)));
+                    blockers.forEach(edge -> panel.draw(new LineSegment(
+                            negativeMove.configuration.inner.getPointAlongPerimeter(0.5),
+                            edge.getPointAlongPerimeter(0.5))));
                 }
 
                 panel.setForwardArrowStyle(ArrowStyle.LINEAR, 0);
@@ -341,17 +350,21 @@ public class Simplification {
 
         for (var move : data.positiveMoves) {
             if (move.hasContraction()) {
-                var blockers = move.getBlockingVectors();
+                var blockers = move.getBlockingEdges();
 
-                blockers.forEach(vector -> panel.draw(new LineSegment(move.configuration.inner.getPointAlongPerimeter(0.5), vector)));
+                blockers.forEach(edge -> panel.draw(new LineSegment(
+                        move.configuration.inner.getPointAlongPerimeter(0.5),
+                        edge.getPointAlongPerimeter(0.5))));
             }
         }
 
         for (var move : data.negativeMoves) {
             if (move.hasContraction()) {
-                var blockers = move.getBlockingVectors();
+                var blockers = move.getBlockingEdges();
 
-                blockers.forEach(vector -> panel.draw(new LineSegment(move.configuration.inner.getPointAlongPerimeter(0.5), vector)));
+                blockers.forEach(edge -> panel.draw(new LineSegment(
+                        move.configuration.inner.getPointAlongPerimeter(0.5),
+                        edge.getPointAlongPerimeter(0.5))));
             }
         }
 

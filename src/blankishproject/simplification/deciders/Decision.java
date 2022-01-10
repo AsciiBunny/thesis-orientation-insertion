@@ -20,7 +20,7 @@ public class Decision {
     }
 
     public Decision(Configuration configuration, Move move, double removeArea) {
-        this(configuration, move, removeArea, false);
+        this(configuration, move, removeArea, true);
     }
 
     public Decision(Configuration configuration, Move move, double removeArea, boolean requiresCleanup) {

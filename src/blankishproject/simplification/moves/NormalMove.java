@@ -2,7 +2,6 @@ package blankishproject.simplification.moves;
 
 import blankishproject.Util;
 import blankishproject.simplification.Configuration;
-import nl.tue.geometrycore.geometry.BaseGeometry;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Line;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
@@ -24,7 +23,7 @@ public abstract class NormalMove extends Move {
     protected final Vector direction;
     protected double distance;
 
-    protected List<Vector> blockingVectors;
+    protected List<LineSegment> blockingEdges;
 
     public NormalMove(Configuration configuration, Polygon polygon) {
         this.configuration = configuration;
@@ -32,7 +31,7 @@ public abstract class NormalMove extends Move {
         this.direction = calculateDirection();
         this.contraction = calculateContraction();
 
-        this.blockingVectors = calculateBlockingVectors(polygon, contraction);
+        this.blockingEdges = calculateBlockingVectors(polygon, contraction);
     }
 
     @Override
@@ -75,11 +74,23 @@ public abstract class NormalMove extends Move {
     }
 
     public int getBlockingNumber() {
-        return blockingVectors.size();
+        return blockingEdges.size();
     }
 
-    public List<Vector> getBlockingVectors() {
-        return blockingVectors;
+    public List<LineSegment> getBlockingEdges() {
+        return blockingEdges;
+    }
+
+    public List<Vector> getBoundary() {
+        return Arrays.asList(configuration.previous.getStart(),
+                configuration.inner.getStart(),
+                configuration.next.getStart(),
+                configuration.next.getEnd());
+    }
+
+    public Polygon getContractionArea(LineSegment outer) {
+        var inner = configuration.inner;
+        return new Polygon(inner.getStart(), inner.getEnd(), outer.getEnd(), outer.getStart());
     }
     //endregion
 
@@ -272,48 +283,56 @@ public abstract class NormalMove extends Move {
      * Find all blocking vectors for this contraction.
      * <br> Complexity O(n)
      */
-    protected List<Vector> calculateBlockingVectors(Polygon polygon, LineSegment outer) {
+    protected List<LineSegment> calculateBlockingVectors(Polygon polygon, LineSegment outer) {
         if (outer == null)
             return new ArrayList<>();
 
-        var previous = configuration.previous;
-        var inner = configuration.inner;
-        var next = configuration.next;
+        var boundary = getBoundary();
+        var contractionArea = getContractionArea(outer);
 
-        var boundary = Arrays.asList(previous.getStart(), inner.getStart(), next.getStart(), next.getEnd());
-        var contractionArea = new Polygon(inner.getStart(), inner.getEnd(), outer.getEnd(), outer.getStart());
-
-        var vertices = new ArrayList<Vector>();
+        var edges = new ArrayList<LineSegment>();
         polygon.edges().forEach(edge -> {
-            if (undirectedEquals(edge, previous) || undirectedEquals(edge, inner) || undirectedEquals(edge, next))
-                return;
-
-            var intersection = contractionArea.intersect(edge);
-            //noinspection rawtypes
-            for (BaseGeometry geo : intersection) {
-                if (geo instanceof Vector) {
-                    vertices.add((Vector) geo);
-                } else if (geo instanceof LineSegment) {
-                    vertices.add(((LineSegment) geo).getStart());
-                    vertices.add(((LineSegment) geo).getEnd());
-                }
-            }
+            if (isBlocking(contractionArea, boundary, edge))
+                edges.add(edge);
         });
 
-        return vertices.stream().filter(vector -> boundary.stream().noneMatch(bound -> bound.isApproximately(vector))).collect(Collectors.toList());
+        return edges;
     }
     //endregion initialization calculations
 
-    public void updateBlockingVectors(List<Vector> removed) {
+    public boolean isBlocking(Polygon contractionArea, List<Vector> boundary, LineSegment edge) {
+        if (undirectedEquals(edge, configuration.previous) || undirectedEquals(edge, configuration.inner) || undirectedEquals(edge, configuration.next))
+            return false;
+
+        var intersection = contractionArea.intersect(edge);
+
+        for (var geo : intersection) {
+            if (geo instanceof Vector) {
+                if (boundary.stream().noneMatch(bound -> bound.isApproximately((Vector) geo)))
+                    return true;
+            } else if (geo instanceof LineSegment) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void updateBlockingVectors(List<LineSegment> removed, List<LineSegment> changed) {
         if (!this.hasContraction()) return;
 
-        blockingVectors.removeAll(removed);
+        var boundary = getBoundary();
+        var contractionArea = getContractionArea(contraction);
 
-        var contractionArea = new Polygon(configuration.inner.getStart(), configuration.inner.getEnd(), contraction.getEnd(), contraction.getStart());
-        var before = getBlockingNumber();
-        blockingVectors = blockingVectors.stream().filter(contractionArea::contains).collect(Collectors.toList());
+        blockingEdges = blockingEdges.stream().filter(edge -> {
+            if (removed.stream().anyMatch(removedEdge -> undirectedEquals(removedEdge, edge)))
+                return false;
 
-        if (getBlockingNumber() != before)
-            System.out.println("Removed " + (before - getBlockingNumber()) + " blocking vertices");
+            return isBlocking(contractionArea, boundary, edge);
+        }).collect(Collectors.toList());
+
+        changed.forEach(changedEdge -> {
+            if (isBlocking(contractionArea, boundary, changedEdge))
+                blockingEdges.add(changedEdge);
+        });
     }
 }

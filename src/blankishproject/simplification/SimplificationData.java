@@ -5,6 +5,7 @@ import blankishproject.simplification.moves.PairNormalMove;
 import blankishproject.simplification.moves.PositiveNormalMove;
 import blankishproject.ui.ProgressDialog;
 import nl.tue.geometrycore.geometry.Vector;
+import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 
 import java.util.ArrayList;
@@ -60,13 +61,15 @@ public class SimplificationData {
         this.dialog = null;
     }
 
-    public Vector removeAtIndex(int index) {
+    public LineSegment removeAtIndex(int index) {
         configurations.remove(index);
         positiveMoves.remove(index);
         negativeMoves.remove(index);
         positivePairMoves.remove(index);
         negativePairMoves.remove(index);
-        return polygon.removeVertex(index);
+        var edge = polygon.edge(index).clone();
+        polygon.removeVertex(index);
+        return edge;
     }
 
     public void resetAtIndex(int index) {

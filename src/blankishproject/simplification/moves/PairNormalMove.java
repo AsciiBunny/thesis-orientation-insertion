@@ -5,6 +5,7 @@ import blankishproject.simplification.Simplification;
 import blankishproject.simplification.SimplificationData;
 import blankishproject.simplification.deciders.Decision;
 import nl.tue.geometrycore.geometry.Vector;
+import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.util.DoubleUtil;
 
@@ -25,7 +26,7 @@ public class PairNormalMove extends Move {
     protected boolean isValid;
     protected double area;
 
-    protected List<Vector> blockingVectors;
+    protected List<LineSegment> blockingEdges;
 
     public PairNormalMove(SimplificationData data, Configuration configuration, boolean invalid) {
         this.data = data;
@@ -37,7 +38,7 @@ public class PairNormalMove extends Move {
 
         this.isValid = false;
         this.area = 0;
-        this.blockingVectors = Collections.emptyList();
+        this.blockingEdges = Collections.emptyList();
     }
 
     public PairNormalMove(Configuration configuration, Configuration pairedConfiguration, NormalMove move, NormalMove pairedMove, SimplificationData data) {
@@ -52,7 +53,7 @@ public class PairNormalMove extends Move {
             calculateArea();
         // calculateArea can invalidate
         if (isValid && area > 0)
-            this.blockingVectors = calculateBlockingVectors(data.polygon);
+            this.blockingEdges = calculateBlockingVectors(data.polygon);
     }
 
 
@@ -62,7 +63,7 @@ public class PairNormalMove extends Move {
     }
 
     public boolean isValid() {
-        return isValid && blockingVectors.size() == 0;
+        return isValid && blockingEdges.size() == 0;
     }
 
     @Override
@@ -159,33 +160,41 @@ public class PairNormalMove extends Move {
      * Find all blocking vectors for this contraction.
      * <br> Complexity O(n)
      */
-    protected List<Vector> calculateBlockingVectors(Polygon polygon) {
-        var vectors = move.calculateBlockingVectors(polygon, move.getForArea(area));
-        vectors.addAll(pairedMove.calculateBlockingVectors(polygon, pairedMove.getForArea(area)));
-        return vectors;
+    protected List<LineSegment> calculateBlockingVectors(Polygon polygon) {
+        var edges = move.calculateBlockingVectors(polygon, move.getForArea(area));
+        edges.addAll(pairedMove.calculateBlockingVectors(polygon, pairedMove.getForArea(area)));
+        return edges;
     }
 
-    public void updateBlockingVectors(List<Vector> removed) {
+    public void updateBlockingVectors(List<LineSegment> removed, List<LineSegment> changed) {
         if (!this.isValid) return;
 
-        blockingVectors.removeAll(removed);
-
-        var before = blockingVectors.size();
-
         var outer = move.getForArea(area);
-        var contractionArea = new Polygon(configuration.inner.getStart(), configuration.inner.getEnd(), outer.getEnd(), outer.getStart());
-        blockingVectors = blockingVectors.stream().filter(contractionArea::contains).collect(Collectors.toList());
+        var contractionArea = move.getContractionArea(outer);
+        var boundary = move.getBoundary();
 
-        var pairedOuter = move.getForArea(area);
-        var pairedContractionArea = new Polygon(pairedConfiguration.inner.getStart(), pairedConfiguration.inner.getEnd(), pairedOuter.getEnd(), pairedOuter.getStart());
-        blockingVectors = blockingVectors.stream().filter(pairedContractionArea::contains).collect(Collectors.toList());
+        var pairedOuter = pairedMove.getForArea(area);
+        var pairedContractionArea = pairedMove.getContractionArea(pairedOuter);
+        var pairedBoundary = pairedMove.getBoundary();
 
-        // TODO: Points can get moved into this area.
-        // TODO: check how points are calculated, if not saving actual vectors this might not work.
+        blockingEdges = blockingEdges.stream().filter(edge -> {
+            if (removed.stream().anyMatch(removedEdge -> undirectedEquals(removedEdge, edge)))
+                return false;
 
-        if (blockingVectors.size() != before)
-            System.out.println("Removed " + (before - blockingVectors.size()) + " blocking vertices");
+            if (move.isBlocking(contractionArea, boundary, edge))
+                return true;
+            if (pairedMove.isBlocking(pairedContractionArea, pairedBoundary, edge))
+                return true;
 
+            return false;
+        }).collect(Collectors.toList());
+
+        changed.forEach(changedEdge -> {
+            if (move.isBlocking(contractionArea, boundary, changedEdge))
+                blockingEdges.add(changedEdge);
+            else if (pairedMove.isBlocking(pairedContractionArea, pairedBoundary, changedEdge))
+                blockingEdges.add(changedEdge);
+        });
     }
     //endregion Blocking Vectors
 
