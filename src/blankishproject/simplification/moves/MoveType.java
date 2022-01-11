@@ -5,5 +5,6 @@ public enum MoveType {
     POSITIVE,
     NEGATIVE,
     POSITIVE_PAIR,
-    NEGATIVE_PAIR;
+    NEGATIVE_PAIR,
+    ROTATION,
 }

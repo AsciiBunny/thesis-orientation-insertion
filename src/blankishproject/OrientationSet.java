@@ -101,7 +101,7 @@ public class OrientationSet implements Iterable<OrientationSet.Orientation> {
         }
     }
 
-    class Orientation {
+    public static class Orientation {
         private final double orientation;
         private final Vector direction;
         private int index;

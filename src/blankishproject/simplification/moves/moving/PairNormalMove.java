@@ -1,9 +1,11 @@
-package blankishproject.simplification.moves;
+package blankishproject.simplification.moves.moving;
 
 import blankishproject.simplification.Configuration;
 import blankishproject.simplification.Simplification;
 import blankishproject.simplification.SimplificationData;
 import blankishproject.simplification.deciders.Decision;
+import blankishproject.simplification.moves.Move;
+import blankishproject.simplification.moves.MoveType;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;

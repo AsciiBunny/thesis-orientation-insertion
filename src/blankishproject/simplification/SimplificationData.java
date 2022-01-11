@@ -1,10 +1,15 @@
 package blankishproject.simplification;
 
-import blankishproject.simplification.moves.NegativeNormalMove;
-import blankishproject.simplification.moves.PairNormalMove;
-import blankishproject.simplification.moves.PositiveNormalMove;
+import blankishproject.OrientationSet;
+import blankishproject.Util;
+import blankishproject.simplification.moves.moving.NegativeNormalMove;
+import blankishproject.simplification.moves.moving.PairNormalMove;
+import blankishproject.simplification.moves.moving.PositiveNormalMove;
+import blankishproject.simplification.moves.rotation.EndRotationMove;
+import blankishproject.simplification.moves.rotation.MiddleRotationMove;
+import blankishproject.simplification.moves.rotation.RotationMove;
+import blankishproject.simplification.moves.rotation.StartRotationMove;
 import blankishproject.ui.ProgressDialog;
-import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 
@@ -13,6 +18,8 @@ import java.util.ArrayList;
 public class SimplificationData {
 
     public Polygon polygon;
+    public OrientationSet orientations = new OrientationSet();
+
     public ArrayList<Configuration> configurations;
 
     public ArrayList<PositiveNormalMove> positiveMoves;
@@ -21,9 +28,20 @@ public class SimplificationData {
     public ArrayList<PairNormalMove> positivePairMoves;
     public ArrayList<PairNormalMove> negativePairMoves;
 
+    public ArrayList<RotationMove> startRotationMoves;
+    public ArrayList<RotationMove> endRotationMoves;
+    public ArrayList<RotationMove> middleRotationMoves;
+
     public String deciderType = "4. Minimal Complementary Pair";
 
     private ProgressDialog dialog;
+    public boolean runThreaded = true;
+
+    //region Calculate Settings
+    public boolean calculateStartRotationMoves = true;
+    public boolean calculateEndRotationMoves = true;
+    public boolean calculateMiddleRotationMoves = true;
+    //endregion Calculate Settings
 
     // region Debug Drawing Settings
     public int selectedEdge = -1;
@@ -37,27 +55,58 @@ public class SimplificationData {
     public boolean drawNegativePairs = false;
     public boolean drawBlockingPoints = false;
 
+    public boolean drawStartRotations = false;
+    public boolean drawEndRotations = false;
+    public boolean drawMiddleRotations = false;
+
     public boolean drawInnerDifference = false;
     public boolean drawOuterDifference = false;
     // endregions Debug Drawing Settings
 
     public SimplificationData(Polygon polygon) {
+        orientations.addOrientationDegrees(0);
+        orientations.addOrientationDegrees(45);
+        orientations.addOrientationDegrees(90);
+        orientations.addOrientationDegrees(135);
+
         init(polygon, null);
+    }
+
+    public void reset() {
+        configurations = new ArrayList<>();
+        positiveMoves = new ArrayList<>();
+        negativeMoves = new ArrayList<>();
+        positivePairMoves = new ArrayList<>();
+        negativePairMoves = new ArrayList<>();
+        startRotationMoves = new ArrayList<>();
+        endRotationMoves = new ArrayList<>();
+        middleRotationMoves = new ArrayList<>();
     }
 
     public void init(Polygon polygon, ProgressDialog dialog) {
         this.polygon = polygon;
 
         this.dialog = dialog;
-        if (dialog != null)
-            dialog.setMaxProgress(polygon.vertexCount() * 4);
+        if (dialog != null) {
+            var count = 5 + Util.countTrue(calculateStartRotationMoves, calculateEndRotationMoves, calculateMiddleRotationMoves);
+            dialog.setMaxProgress(polygon.vertexCount() * count);
+        }
 
         configurations = initConfigurations();
 
         positiveMoves = initPositiveMoves();
         negativeMoves = initNegativeMoves();
-
         initAllSpecialPairs();
+
+        if (calculateStartRotationMoves)
+            startRotationMoves = initStartRotationMoves();
+        if (calculateEndRotationMoves)
+            endRotationMoves = initEndRotationMoves();
+        if (calculateMiddleRotationMoves)
+            middleRotationMoves = initMiddleRotationMoves();
+
+        System.out.println(startRotationMoves.size());
+
         this.dialog = null;
     }
 
@@ -67,6 +116,14 @@ public class SimplificationData {
         negativeMoves.remove(index);
         positivePairMoves.remove(index);
         negativePairMoves.remove(index);
+
+        if (calculateStartRotationMoves)
+            startRotationMoves.remove(index);
+        if (calculateEndRotationMoves)
+            endRotationMoves.remove(index);
+        if (calculateMiddleRotationMoves)
+            middleRotationMoves.remove(index);
+
         var edge = polygon.edge(index).clone();
         polygon.removeVertex(index);
         return edge;
@@ -77,10 +134,19 @@ public class SimplificationData {
 
         var configuration = new Configuration(polygon, index);
         configurations.set(index, configuration);
+
         positiveMoves.set(index, new PositiveNormalMove(configuration, polygon));
         negativeMoves.set(index, new NegativeNormalMove(configuration, polygon));
         positivePairMoves.set(index, new PairNormalMove(this, configuration, true));
         negativePairMoves.set(index, new PairNormalMove(this, configuration, true));
+
+        if (calculateStartRotationMoves)
+            startRotationMoves.set(index, new StartRotationMove(configuration, orientations));
+        if (calculateEndRotationMoves)
+            endRotationMoves.set(index, new EndRotationMove(configuration, orientations));
+        if (calculateMiddleRotationMoves)
+            middleRotationMoves.set(index, new MiddleRotationMove(configuration, orientations));
+
     }
 
     private ArrayList<Configuration> initConfigurations() {
@@ -164,5 +230,35 @@ public class SimplificationData {
         }
 
         return new PairNormalMove[]{positivePairMove, negativePairMove};
+    }
+
+    private ArrayList<RotationMove> initStartRotationMoves() {
+        var list = new ArrayList<RotationMove>(polygon.vertexCount());
+        for (int index = 0; index < polygon.vertexCount(); index++) {
+            list.add(new StartRotationMove(configurations.get(index), orientations));
+            if (dialog != null)
+                dialog.increaseProgress(1);
+        }
+        return list;
+    }
+
+    private ArrayList<RotationMove> initEndRotationMoves() {
+        var list = new ArrayList<RotationMove>(polygon.vertexCount());
+        for (int index = 0; index < polygon.vertexCount(); index++) {
+            list.add(new EndRotationMove(configurations.get(index), orientations));
+            if (dialog != null)
+                dialog.increaseProgress(1);
+        }
+        return list;
+    }
+
+    private ArrayList<RotationMove> initMiddleRotationMoves() {
+        var list = new ArrayList<RotationMove>(polygon.vertexCount());
+        for (int index = 0; index < polygon.vertexCount(); index++) {
+            list.add(new MiddleRotationMove(configurations.get(index), orientations));
+            if (dialog != null)
+                dialog.increaseProgress(1);
+        }
+        return list;
     }
 }

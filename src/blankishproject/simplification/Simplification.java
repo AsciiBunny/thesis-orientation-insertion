@@ -5,11 +5,11 @@ import blankishproject.GeometryList;
 import blankishproject.Util;
 import blankishproject.simplification.deciders.Decision;
 import blankishproject.simplification.deciders.IDecider;
-import blankishproject.simplification.moves.NormalMove;
-import blankishproject.simplification.moves.PairNormalMove;
+import blankishproject.simplification.moves.moving.NormalMove;
+import blankishproject.simplification.moves.moving.PairNormalMove;
+import blankishproject.simplification.moves.rotation.RotationMove;
 import blankishproject.ui.DrawPanel;
 import blankishproject.ui.ProgressDialog;
-import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.curved.CircularArc;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 public class Simplification {
 
-    private static final int affectedRange = 3;
+    private static final int affectedRange = 4;
 
 
     public static int totalVerticesRemoved = 0;
@@ -236,6 +236,7 @@ public class Simplification {
             data.resetAtIndex(index);
         }
 
+
         for (var index : indices) {
             data.resetSpecialPairs(index);
             var offsetIndex = (index - 2 + data.configurations.size()) % data.configurations.size();
@@ -293,6 +294,14 @@ public class Simplification {
 
             if (data.drawBlockingPoints)
                 drawBlockingVectors(panel, data);
+
+            if (data.drawStartRotations)
+                drawDebugRotations(panel, data.startRotationMoves);
+            if (data.drawEndRotations)
+                drawDebugRotations(panel, data.endRotationMoves);
+            if (data.drawMiddleRotations)
+                drawDebugRotations(panel, data.middleRotationMoves);
+
         }
 
 
@@ -316,6 +325,13 @@ public class Simplification {
                 drawDebugComplementaryMoves(panel, Collections.singletonList(data.positivePairMoves.get(index)));
             if (data.drawNegativePairs)
                 drawDebugComplementaryMoves(panel, Collections.singletonList(data.negativePairMoves.get(index)));
+
+            if (data.drawStartRotations)
+                drawDebugRotations(panel, Collections.singletonList(data.startRotationMoves.get(index)));
+            if (data.drawEndRotations)
+                drawDebugRotations(panel, Collections.singletonList(data.endRotationMoves.get(index)));
+            if (data.drawMiddleRotations)
+                drawDebugRotations(panel, Collections.singletonList(data.middleRotationMoves.get(index)));
 
             if (data.drawBlockingPoints) {
                 panel.setStroke(Color.cyan, 3, Dashing.dashed(3));
@@ -436,6 +452,16 @@ public class Simplification {
 
             panel.setTextStyle(TextAnchor.BASELINE_CENTER, 16);
             panel.draw(new LineSegment(a, contraction.getPointAlongPerimeter(0.5)).getPointAlongPerimeter(0.5), String.format("%.2f", area));
+        }
+    }
+
+    private static void drawDebugRotations(DrawPanel panel, List<RotationMove> rotations) {
+        for (var rotation : rotations) {
+            if (!rotation.isValid()) continue;
+            var newInner = rotation.getRotation();
+
+            panel.setStroke(Color.pink, 3, Dashing.SOLID);
+            panel.draw(newInner);
         }
     }
 

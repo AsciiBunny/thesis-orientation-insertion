@@ -1,11 +1,9 @@
 package blankishproject.simplification.deciders;
 
-import blankishproject.simplification.moves.MoveType;
 import blankishproject.simplification.Configuration;
 import blankishproject.simplification.SimplificationData;
-import blankishproject.simplification.moves.NegativeNormalMove;
-import blankishproject.simplification.moves.PositiveNormalMove;
-import nl.tue.geometrycore.geometry.linear.Polygon;
+import blankishproject.simplification.moves.moving.NegativeNormalMove;
+import blankishproject.simplification.moves.moving.PositiveNormalMove;
 import nl.tue.geometrycore.util.DoubleUtil;
 
 import java.util.Collections;

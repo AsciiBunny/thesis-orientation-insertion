@@ -1,19 +1,20 @@
-package blankishproject.simplification.moves;
+package blankishproject.simplification.moves.moving;
 
 import blankishproject.simplification.Configuration;
+import blankishproject.simplification.moves.MoveType;
 import nl.tue.geometrycore.geometry.Vector;
-import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
+import nl.tue.geometrycore.geometry.linear.Polygon;
 
-public class PositiveNormalMove extends NormalMove {
+public class NegativeNormalMove extends NormalMove {
 
-    public PositiveNormalMove(Configuration configuration, Polygon polygon) {
+    public NegativeNormalMove(Configuration configuration, Polygon polygon) {
         super(configuration, polygon);
     }
 
     @Override
     public MoveType getType() {
-        return MoveType.POSITIVE;
+        return MoveType.NEGATIVE;
     }
 
     /**
@@ -22,7 +23,7 @@ public class PositiveNormalMove extends NormalMove {
      */
     @Override
     protected LineSegment calculateContraction() {
-        if (configuration.isInnerConvex())
+        if (configuration.isInnerReflex())
             return null;
 
         var normal = Vector.multiply(distance, direction);
@@ -36,7 +37,7 @@ public class PositiveNormalMove extends NormalMove {
      */
     @Override
     protected Vector calculateDirection() {
-        return configuration.getOutwardsNormal();
+        return configuration.getInwardsNormal();
     }
 
     /**
@@ -45,11 +46,9 @@ public class PositiveNormalMove extends NormalMove {
      */
     @Override
     protected double calculateDistance() {
-        var previousDistance = configuration.isStartReflex() ? configuration.getInnerTrack().distanceTo(configuration.previous.getStart()) : Integer.MAX_VALUE;
-        var nextDistance = configuration.isEndReflex() ? configuration.getInnerTrack().distanceTo(configuration.next.getEnd()) : Integer.MAX_VALUE;
+        var previousDistance = configuration.isStartConvex() ? configuration.getInnerTrack().distanceTo(configuration.previous.getStart()) : Integer.MAX_VALUE;
+        var nextDistance = configuration.isEndConvex() ? configuration.getInnerTrack().distanceTo(configuration.next.getEnd()) : Integer.MAX_VALUE;
 
         return Math.min(previousDistance, nextDistance);
     }
-
-
 }

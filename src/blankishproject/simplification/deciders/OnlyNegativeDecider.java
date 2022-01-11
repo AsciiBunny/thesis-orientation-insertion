@@ -1,9 +1,7 @@
 package blankishproject.simplification.deciders;
 
-import blankishproject.simplification.moves.MoveType;
-import blankishproject.simplification.Configuration;
 import blankishproject.simplification.SimplificationData;
-import blankishproject.simplification.moves.NegativeNormalMove;
+import blankishproject.simplification.moves.moving.NegativeNormalMove;
 
 import java.util.Collections;
 import java.util.List;

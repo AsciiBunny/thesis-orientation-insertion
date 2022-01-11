@@ -77,9 +77,9 @@ public class Data {
         staircaseOrientations.addOrientationDegrees(90);
 
         orientations.addOrientationDegrees(0);
-        orientations.addOrientationDegrees(0 + 45);
+        orientations.addOrientationDegrees(45);
         orientations.addOrientationDegrees(90);
-        orientations.addOrientationDegrees(90 + 45);
+        orientations.addOrientationDegrees(135);
     }
 
     public void select(Vector loc, double distance) {
@@ -156,57 +156,77 @@ public class Data {
     }
 
     public void runXCyclesSimplificationAlgorithm(int cycles) {
-        new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() {
-                dialog.setMaxProgress(cycles);
-                dialog.show();
-                Simplification.run(Data.this, cycles, dialog);
-                return null;
-            }
+        if (simplificationData.runThreaded) {
+            new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() {
+                    dialog.setMaxProgress(cycles);
+                    dialog.show();
+                    Simplification.run(Data.this, cycles, dialog);
+                    return null;
+                }
 
-            @Override
-            protected void done() {
-                dialog.stop();
-                repaint();
-            }
-        }.execute();
+                @Override
+                protected void done() {
+                    dialog.stop();
+                    repaint();
+                }
+
+
+
+            }.execute();
+        } else {
+            Simplification.run(Data.this, cycles, dialog);
+            repaint();
+        }
     }
 
     public void runUntilKLeftSimplificationAlgorithm(int K) {
-        new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() {
-                dialog.setMaxProgress(simplificationData.polygon.vertexCount() - K);
-                dialog.show();
-                Simplification.runUntilLeft(Data.this, K, dialog);
-                return null;
-            }
+        if (simplificationData.runThreaded) {
+            new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() {
+                    dialog.setMaxProgress(simplificationData.polygon.vertexCount() - K);
+                    dialog.show();
+                    Simplification.runUntilLeft(Data.this, K, dialog);
+                    return null;
+                }
 
-            @Override
-            protected void done() {
-                dialog.stop();
-                repaint();
-            }
-        }.execute();
+                @Override
+                protected void done() {
+                    dialog.stop();
+                    repaint();
+                }
+            }.execute();
+        } else {
+            Simplification.runUntilLeft(Data.this, K, dialog);
+            repaint();
+        }
+
     }
 
     public void finishSimplificationAlgorithm() {
-        new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() {
-                dialog.setMaxProgress(simplificationData.polygon.vertexCount());
-                dialog.show();
-                Simplification.finish(Data.this, dialog);
-                return null;
-            }
+        if (simplificationData.runThreaded) {
+            new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() {
+                    dialog.setMaxProgress(simplificationData.polygon.vertexCount());
+                    dialog.show();
+                    Simplification.finish(Data.this, dialog);
+                    return null;
+                }
 
-            @Override
-            protected void done() {
-                dialog.stop();
-                repaint();
-            }
-        }.execute();
+                @Override
+                protected void done() {
+                    dialog.stop();
+                    repaint();
+                }
+            }.execute();
+        } else {
+            Simplification.finish(Data.this, dialog);
+            repaint();
+        }
+
     }
 
     public void setAsInputSimplificationAlgorithm() {
@@ -226,7 +246,6 @@ public class Data {
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() {
-                dialog.setMaxProgress(simplificationData.polygon.vertexCount() * 4);
                 dialog.setProgress(0);
                 dialog.show();
                 Simplification.initState(simplificationData, original, dialog);
@@ -240,6 +259,31 @@ public class Data {
                 repaint();
             }
         }.execute();
+    }
+
+    public void recalculateState() {
+        runChecks();
+        if (simplificationData.runThreaded) {
+            new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() {
+                    dialog.setProgress(0);
+                    dialog.show();
+                    Simplification.initState(simplificationData, simplificationData.polygon, dialog);
+                    return null;
+                }
+
+                @Override
+                protected void done() {
+                    dialog.stop();
+                    repaint();
+                }
+            }.execute();
+        } else {
+            Simplification.initState(simplificationData, simplificationData.polygon, dialog);
+            repaint();
+        }
+
     }
 
     public void runSchematizationAlgorithm() {

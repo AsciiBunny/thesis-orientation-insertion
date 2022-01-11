@@ -88,10 +88,15 @@ public class SimplificationTab {
         });
 
         tab.addButton("Reset State", (e -> {
-            data.initState();
+            data.recalculateState();
             data.draw.repaint();
             this.repaint();
         }));
+
+        tab.addCheckbox("Run Threaded", data.simplificationData.runThreaded, (e, b) -> {
+            data.simplificationData.runThreaded = b;
+            data.draw.repaint();
+        });
     }
 
     private void addSimplificationOptionsSection(SideTab tab) {
@@ -100,6 +105,25 @@ public class SimplificationTab {
 
         var keySet = IDecider.deciders.keySet().stream().sorted().toArray(String[]::new);
         tab.addComboBox(keySet, data.simplificationData.deciderType, (e, v) -> data.simplificationData.deciderType = v);
+
+        tab.addSpace(3);
+
+        var sData = data.simplificationData;
+
+        tab.addCheckbox("Calculate Start Rotations", sData.calculateStartRotationMoves, (e, b) -> {
+            sData.calculateStartRotationMoves = b;
+            data.draw.repaint();
+        });
+
+        tab.addCheckbox("Calculate End Rotations", sData.calculateEndRotationMoves, (e, b) -> {
+            sData.calculateEndRotationMoves = b;
+            data.draw.repaint();
+        });
+
+        tab.addCheckbox("Calculate Middle Rotations", sData.calculateMiddleRotationMoves, (e, b) -> {
+            sData.calculateMiddleRotationMoves = b;
+            data.draw.repaint();
+        });
     }
 
 
@@ -176,6 +200,23 @@ public class SimplificationTab {
 
         tab.addCheckbox("Draw Blocking Points", sData.drawBlockingPoints, (e, b) -> {
             sData.drawBlockingPoints = b;
+            data.draw.repaint();
+        });
+
+        tab.addSpace(3);
+
+        tab.addCheckbox("Draw Start Rotations", sData.drawStartRotations, (e, b) -> {
+            sData.drawStartRotations = b;
+            data.draw.repaint();
+        });
+
+        tab.addCheckbox("Draw End Rotations", sData.drawEndRotations, (e, b) -> {
+            sData.drawEndRotations = b;
+            data.draw.repaint();
+        });
+
+        tab.addCheckbox("Draw Middle Rotations", sData.drawMiddleRotations, (e, b) -> {
+            sData.drawMiddleRotations = b;
             data.draw.repaint();
         });
 

@@ -65,4 +65,13 @@ public class Util {
         }
         return polygon;
     }
+
+    public static int countTrue(boolean... booleans) {
+        var count = 0;
+        for (boolean bool : booleans) {
+            if (bool)
+                count ++;
+        }
+        return count;
+    }
 }
