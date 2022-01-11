@@ -181,7 +181,7 @@ public class Schematization {
 
                 var next_points = buildStaircase(data.orientations, next, inbetween, nextNext, counterClockwise, nextSignificance, steps);
                 Collections.reverse(next_points);
-                next_points.remove(0);
+                //next_points.remove(0);
                 next_points.forEach(line::addVertex);
 
                 line.addVertex(next.clone());
@@ -239,7 +239,7 @@ public class Schematization {
                 buildStep(points, now, assignedStep, associatedStep, false);
                 buildStep(points, now, associatedStep, assignedStep, false);
             }
-            points.add(now);
+            points.add(now.clone());
         }
 
 
