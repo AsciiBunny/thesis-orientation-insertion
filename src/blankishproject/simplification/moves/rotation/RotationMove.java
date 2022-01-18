@@ -12,7 +12,7 @@ import nl.tue.geometrycore.util.DoubleUtil;
 
 public class RotationMove extends Move {
 
-    protected final Configuration configuration;
+    public final Configuration configuration;
     protected final OrientationSet orientations;
     protected final Vector rotationPoint;
 
@@ -26,9 +26,16 @@ public class RotationMove extends Move {
         this.rotationPoint = rotationPoint;
         this.orientations = orientations;
 
+        if (this.configuration.isInnerReflex() || this.configuration.isInnerConvex()) {
+            return;
+        }
+
         this.rotation = calculateRotation();
         if (this.rotation != null) {
-            this.area = calculateArea();
+            this.area = calculateArea(this.rotation);
+        }
+        if (this.area <= DoubleUtil.EPS){
+            rotation = null;
         }
     }
 
@@ -70,27 +77,44 @@ public class RotationMove extends Move {
 
     //region calculation
     protected LineSegment calculateRotation() {
-        var configurationDirection = Vector.subtract(configuration.next.getEnd(), configuration.inner.getStart());
-        var closestOrientation = orientations.getClosest(configurationDirection.computeClockwiseAngleTo(Vector.up()));
-        direction = closestOrientation.getDirection();
+        var largestArea = -1.0;
+        LineSegment largestRotation = null;
 
-        var resultLine = new Line(rotationPoint, direction);
+        for (OrientationSet.Orientation orientation : orientations) {
+            direction = orientation.getDirection();
 
-        var prevIntersections = resultLine.intersect(configuration.previous);
-        if (!(prevIntersections.size() == 1 && prevIntersections.get(0) instanceof Vector)) {
-            return null;
+            var innerDirection = configuration.inner.getDirection();
+            innerDirection.normalize();
+            direction.normalize();
+            if (innerDirection.isApproximately(direction) || innerDirection.isApproximately(Vector.multiply(-1, direction)))
+                continue;
+
+            var resultLine = new Line(rotationPoint, direction);
+
+            var prevIntersections = resultLine.intersect(configuration.previous);
+            if (!(prevIntersections.size() == 1 && prevIntersections.get(0) instanceof Vector)) {
+                continue;
+            }
+            var nextIntersections = resultLine.intersect(configuration.next);
+            if (!(nextIntersections.size() == 1 && nextIntersections.get(0) instanceof Vector)) {
+                continue;
+            }
+
+            var newPrev = (Vector) prevIntersections.get(0);
+            var newNext = (Vector) nextIntersections.get(0);
+            var newRotation = new LineSegment(newPrev, newNext);
+            var newArea = calculateArea(newRotation);
+
+            if  (newArea > largestArea) {
+                largestArea = newArea;
+                largestRotation = newRotation;
+            }
         }
-        var nextIntersections = resultLine.intersect(configuration.next);
-        if (!(nextIntersections.size() == 1 && nextIntersections.get(0) instanceof Vector)) {
-            return null;
-        }
 
-        var newPrev = (Vector) prevIntersections.get(0);
-        var newNext = (Vector) nextIntersections.get(0);
-        return new LineSegment(newPrev, newNext);
+        return largestRotation;
     }
 
-    private double calculateArea() {
+    private double calculateArea(LineSegment rotation) {
         var prevTriangle = new Polygon(rotationPoint, configuration.previous.getEnd(), rotation.getStart());
         var nextTriangle = new Polygon(rotationPoint, configuration.next.getStart(), rotation.getEnd());
         return prevTriangle.areaUnsigned() + nextTriangle.areaUnsigned();

@@ -280,7 +280,7 @@ public class Simplification {
             if (data.drawConvexityArcs)
                 drawDebugConvexityArcs(panel, configurationList, Color.red, Color.green);
             if (data.drawConvexityEdges)
-                drawDebugConvexityLines(panel, configurationList, Color.red, Color.green);
+                drawDebugConvexityLines(panel, configurationList);
 
             if (data.drawPositiveContractions)
                 drawDebugContractions(panel, Collections.unmodifiableList(data.positiveMoves));
@@ -314,7 +314,7 @@ public class Simplification {
             if (data.drawConvexityArcs)
                 drawDebugConvexityArcs(panel, Collections.singletonList(data.configurations.get(index)), Color.red, Color.green);
             if (data.drawConvexityEdges)
-                drawDebugConvexityLines(panel, Collections.singletonList(data.configurations.get(index)), Color.red, Color.green);
+                drawDebugConvexityLines(panel, Collections.singletonList(data.configurations.get(index)));
 
             if (data.drawPositiveContractions)
                 drawDebugContractions(panel, Collections.singletonList(data.positiveMoves.get(index)));
@@ -488,13 +488,16 @@ public class Simplification {
 
     }
 
-    private static void drawDebugConvexityLines(DrawPanel panel, List<Configuration> list, Color convexColor, Color reflexColor) {
+    private static void drawDebugConvexityLines(DrawPanel panel, List<Configuration> list) {
         for (var conf : list) {
             if (conf.isInnerConvex()) {
-                panel.setStroke(convexColor, 3, Dashing.SOLID);
+                panel.setStroke(Color.red, 3, Dashing.SOLID);
                 panel.draw(conf.inner);
             } else if (conf.isInnerReflex()) {
-                panel.setStroke(reflexColor, 3, Dashing.SOLID);
+                panel.setStroke(Color.green, 3, Dashing.SOLID);
+                panel.draw(conf.inner);
+            } else {
+                panel.setStroke(Color.pink.darker(), 3, Dashing.SOLID);
                 panel.draw(conf.inner);
             }
         }
