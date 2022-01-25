@@ -71,6 +71,11 @@ public class DataTab {
             data.drawStaircase = b;
             data.draw.repaint();
         });
+
+        drawCheckbox = tab.addCheckbox("Draw Alignment Rectangle", data.drawScreenshotAlignment, (e, b) -> {
+            data.drawScreenshotAlignment = b;
+            data.draw.repaint();
+        });
     }
 
     public void repaint() {

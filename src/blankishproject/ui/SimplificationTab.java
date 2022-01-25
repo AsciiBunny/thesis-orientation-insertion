@@ -124,6 +124,14 @@ public class SimplificationTab {
             sData.calculateMiddleRotationMoves = b;
             data.draw.repaint();
         });
+        var label = tab.addLabel("Minimal staircase size: " + data.simplificationData.minStaircaseSize );
+        tab.addIntegerSlider(data.simplificationData.minStaircaseSize, 1, 50, (changeEvent, integer) -> {
+            data.simplificationData.minStaircaseSize = integer;
+            data.simplificationData.recalculateStaircases();
+            label.setText("Minimal staircase size: " + data.simplificationData.minStaircaseSize );
+            data.draw.repaint();
+        });
+
     }
 
 

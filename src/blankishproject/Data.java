@@ -63,6 +63,7 @@ public class Data {
     public boolean drawOrientations = false;
     public boolean drawClassifications = false;
     public boolean drawSignificance = false;
+    public boolean drawScreenshotAlignment = true;
 
     // keep these last
     public DrawPanel draw;

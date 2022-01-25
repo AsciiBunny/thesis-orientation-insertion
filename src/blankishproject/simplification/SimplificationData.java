@@ -14,6 +14,8 @@ import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class SimplificationData {
 
@@ -32,6 +34,8 @@ public class SimplificationData {
     public ArrayList<RotationMove> endRotationMoves;
     public ArrayList<RotationMove> middleRotationMoves;
 
+    public List<Staircase> staircases;
+
     public String deciderType = "4. Minimal Complementary Pair";
 
     private ProgressDialog dialog;
@@ -41,6 +45,8 @@ public class SimplificationData {
     public boolean calculateStartRotationMoves = true;
     public boolean calculateEndRotationMoves = true;
     public boolean calculateMiddleRotationMoves = true;
+
+    public int minStaircaseSize = 5;
     //endregion Calculate Settings
 
     // region Debug Drawing Settings
@@ -98,14 +104,14 @@ public class SimplificationData {
         negativeMoves = initNegativeMoves();
         initAllSpecialPairs();
 
+        recalculateStaircases();
+
         if (calculateStartRotationMoves)
             startRotationMoves = initStartRotationMoves();
         if (calculateEndRotationMoves)
             endRotationMoves = initEndRotationMoves();
         if (calculateMiddleRotationMoves)
             middleRotationMoves = initMiddleRotationMoves();
-
-        System.out.println(startRotationMoves.size());
 
         this.dialog = null;
     }
@@ -260,5 +266,32 @@ public class SimplificationData {
                 dialog.increaseProgress(1);
         }
         return list;
+    }
+
+    public void recalculateStaircases() {
+        staircases = new ArrayList<>();
+        var current = new Staircase();
+        for (int i = 0; i < configurations.size(); i++) {
+            var edge = configurations.get(i);
+            if (edge.isInnerConvex() || edge.isInnerReflex()) {
+                if (current.start >= 0) {
+                    current.end = i - 1;
+                    staircases.add(current);
+                    current.listLength = configurations.size();
+                    current = new Staircase();
+                }
+            } else {
+                if (current.start < 0) {
+                    current.start = i;
+                }
+            }
+        }
+
+        if (current.start >= 0 && current.end < 0) {
+            staircases.get(0).loops = true;
+            staircases.get(0).start = current.start;
+        }
+
+        staircases = staircases.stream().filter(staircase -> staircase.length() >= minStaircaseSize).collect(Collectors.toList());
     }
 }

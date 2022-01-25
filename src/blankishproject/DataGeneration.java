@@ -1,12 +1,23 @@
 package blankishproject;
 
+import blankishproject.ui.DrawPanel;
 import nl.tue.geometrycore.geometry.Vector;
+import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
+import nl.tue.geometrycore.geometryrendering.styling.Dashing;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataGeneration {
+
+    private static LineSegment[] alignment = new LineSegment[]{
+            new LineSegment(new Vector(0, 0), new Vector(0, 400)),
+            new LineSegment(new Vector(0, 400), new Vector(400, 400)),
+            new LineSegment(new Vector(400, 400), new Vector(400, 0)),
+            new LineSegment(new Vector(400, 0), new Vector(0, 0)),
+    };
 
     public static void generate(Data data) {
         var sideLength = 200.0;
@@ -54,6 +65,14 @@ public class DataGeneration {
         now.translate(a);
         points.add(now.clone());
         now.translate(b);
+    }
+
+    public static void drawDebug(Data data, DrawPanel panel) {
+        if (data.drawScreenshotAlignment) {
+            panel.setStroke(Color.black, 3, Dashing.SOLID);
+            panel.draw(alignment);
+        }
+
     }
 
 }

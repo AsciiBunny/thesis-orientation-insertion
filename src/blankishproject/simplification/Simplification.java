@@ -184,6 +184,7 @@ public class Simplification {
 
         //TODO: Blocking numbers
         updateBlockingNumbers(data, removed, changed);
+        data.recalculateStaircases();
     }
 
     private static List<Integer> validityCheck(SimplificationData data, List<Integer> affected, List<LineSegment> removed) {
@@ -302,6 +303,7 @@ public class Simplification {
             if (data.drawMiddleRotations)
                 drawDebugRotations(panel, data.middleRotationMoves);
 
+            drawDebugStaircases(panel, data);
         }
 
 
@@ -499,6 +501,27 @@ public class Simplification {
             } else {
                 panel.setStroke(Color.pink.darker(), 3, Dashing.SOLID);
                 panel.draw(conf.inner);
+            }
+        }
+    }
+
+    private static void drawDebugStaircases(DrawPanel panel, SimplificationData data) {
+        panel.setStroke(Color.red.darker(), 3, Dashing.SOLID);
+        for (var staircase : data.staircases) {
+            if (staircase.loops) {
+                for (int i = 0; i <= staircase.end; i++) {
+                    var edge = data.configurations.get(i);
+                    panel.draw(edge.inner);
+                }
+                for (int i = staircase.start; i < data.configurations.size(); i++) {
+                    var edge = data.configurations.get(i);
+                    panel.draw(edge.inner);
+                }
+            } else {
+                for (int i = staircase.start; i <= staircase.end; i++) {
+                    var edge = data.configurations.get(i);
+                    panel.draw(edge.inner);
+                }
             }
         }
     }

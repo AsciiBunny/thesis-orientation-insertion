@@ -52,7 +52,7 @@ public class DrawPanel extends GeometryPanel {
         if (data.schematization != null && data.schematization.vertexCount() > 0)
             draw(data.schematization);
 
-        if (data.simplificationData.polygon != null && data.original != null && (data.simplificationData.polygon.vertexCount() < data.original.vertexCount() || data.innerDifference.size() > 0 || data.outerDifference.size()>0))
+        if (data.simplificationData.polygon != null && data.original != null && (data.simplificationData.polygon.vertexCount() < data.original.vertexCount() || Simplification.totalMovesMade > 0))
             draw(data.simplificationData.polygon);
 
         if (data.copyMode)
@@ -85,6 +85,7 @@ public class DrawPanel extends GeometryPanel {
 
         Schematization.drawDebug(data, this);
         Simplification.drawDebug(data.simplificationData, this);
+        DataGeneration.drawDebug(data, this);
         Compass.draw(data, this);
         TestCode.draw(data, this);
     }
