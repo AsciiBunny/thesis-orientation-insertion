@@ -52,7 +52,7 @@ public class DrawPanel extends GeometryPanel {
         if (data.schematization != null && data.schematization.vertexCount() > 0)
             draw(data.schematization);
 
-        if (data.simplificationData.polygon != null && data.original != null && data.simplificationData.polygon.vertexCount() < data.original.vertexCount())
+        if (data.simplificationData.polygon != null && data.original != null && (data.simplificationData.polygon.vertexCount() < data.original.vertexCount() || data.innerDifference.size() > 0 || data.outerDifference.size()>0))
             draw(data.simplificationData.polygon);
 
         if (data.copyMode)
