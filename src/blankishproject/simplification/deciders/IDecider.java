@@ -54,7 +54,7 @@ public abstract class IDecider {
             }
         }
 
-        return new Decision(smallest.configuration, smallest, Math.abs(area));
+        return smallest != null ? new Decision(smallest.configuration, smallest, Math.abs(area)) : null;
     }
 
     protected <K extends Move> K getSmallest(K move1, K move2) {
