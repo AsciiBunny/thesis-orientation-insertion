@@ -17,6 +17,11 @@ public class PositiveNormalMove extends NormalMove {
         return MoveType.POSITIVE;
     }
 
+    @Override
+    public double getCompensationArea() {
+        return getArea();
+    }
+
     /**
      * Calculates the new inner edge for this contraction, if it exists.
      * <br> Complexity O(1)

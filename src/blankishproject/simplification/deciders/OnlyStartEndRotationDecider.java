@@ -1,17 +1,18 @@
 package blankishproject.simplification.deciders;
 
 import blankishproject.simplification.SimplificationData;
-import blankishproject.simplification.moves.moving.NegativeNormalMove;
+import blankishproject.simplification.moves.rotation.RotationMove;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class OnlyNegativeDecider extends IDecider {
+public class OnlyStartEndRotationDecider extends IDecider {
 
     @Override
     public List<Decision> findMoves(SimplificationData data) {
-        var min = findSmallest(data.negativeMoves);
+        var smallestStart = findSmallest(data.startRotationMoves);
+        var smallestEnd = findSmallest(data.endRotationMoves);
+        var min = getSmallest(smallestStart, smallestEnd);
 
         if (min == null)
             return Collections.emptyList();

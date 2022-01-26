@@ -110,6 +110,13 @@ public class SimplificationTab {
 
         var sData = data.simplificationData;
 
+        tab.addCheckbox("Compensate Single Moves", sData.compensateSingleMoves, (e, b) -> {
+            sData.compensateSingleMoves = b;
+            data.draw.repaint();
+        });
+
+        tab.addSpace(3);
+
         tab.addCheckbox("Calculate Start Rotations", sData.calculateStartRotationMoves, (e, b) -> {
             sData.calculateStartRotationMoves = b;
             data.draw.repaint();

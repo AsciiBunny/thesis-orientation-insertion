@@ -46,6 +46,8 @@ public class SimplificationData {
     public boolean calculateEndRotationMoves = true;
     public boolean calculateMiddleRotationMoves = true;
 
+    public boolean compensateSingleMoves = true;
+
     public int minStaircaseSize = 5;
     //endregion Calculate Settings
 

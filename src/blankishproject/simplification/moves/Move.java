@@ -1,6 +1,14 @@
 package blankishproject.simplification.moves;
 
+import blankishproject.simplification.Configuration;
+
 public abstract class Move {
+
+    public final Configuration configuration;
+
+    public Move(Configuration configuration) {
+        this.configuration = configuration;
+    }
 
     public abstract MoveType getType();
 
@@ -12,4 +20,6 @@ public abstract class Move {
     public abstract void applyForArea(double area);
 
     public abstract void apply();
+
+    public abstract double getCompensationArea();
 }

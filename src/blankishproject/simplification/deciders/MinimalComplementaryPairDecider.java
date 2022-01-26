@@ -11,7 +11,7 @@ import java.util.List;
 
 import static blankishproject.Util.undirectedEquals;
 
-public class MinimalComplementaryPairDecider implements IDecider {
+public class MinimalComplementaryPairDecider extends IDecider {
 
     @Override
     public List<Decision> findMoves(SimplificationData data) {
@@ -65,24 +65,11 @@ public class MinimalComplementaryPairDecider implements IDecider {
     }
 
     private List<Decision> findPairMove(SimplificationData data) {
-        var bestArea = Double.MAX_VALUE;
-        List<Decision> best = Collections.emptyList();
+        var bestPositive = findSmallest(data.positivePairMoves);
+        var bestNegative = findSmallest(data.negativePairMoves);
+        var smallest = getSmallest(bestPositive, bestNegative);
 
-        for (var move : data.positivePairMoves) {
-            if (move.isValid() && move.getAffectedArea() < bestArea) {
-                best = Collections.singletonList(new Decision(move.configuration, move, move.getAffectedArea(), false));
-                bestArea = move.getAffectedArea();
-            }
-        }
-
-        for (var move : data.negativePairMoves) {
-            if (move.isValid() && move.getAffectedArea() < bestArea) {
-                best = Collections.singletonList(new Decision(move.configuration, move, move.getAffectedArea(), false));
-                bestArea = move.getAffectedArea();
-            }
-        }
-
-        return best;
+        return smallest != null ? Collections.singletonList(new Decision(smallest.configuration, smallest, smallest.getAffectedArea(), false)) : Collections.emptyList();
     }
 
     private boolean doCollide(Configuration positive, Configuration negative) {

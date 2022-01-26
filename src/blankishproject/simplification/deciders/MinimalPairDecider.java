@@ -10,7 +10,7 @@ import java.util.List;
 
 import static blankishproject.Util.undirectedEquals;
 
-public class MinimalPairDecider implements IDecider {
+public class MinimalPairDecider extends IDecider {
     @Override
     public List<Decision> findMoves(SimplificationData data) {
         var positiveMoves = data.positiveMoves;

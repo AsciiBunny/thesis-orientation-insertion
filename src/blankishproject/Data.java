@@ -98,6 +98,7 @@ public class Data {
 
             if (closest >= 0){
                 simplificationData.selectedEdge = closest;
+                System.out.println("Selected edge " + closest);
             }
         } else {
             simplificationData.selectedEdge = -1;

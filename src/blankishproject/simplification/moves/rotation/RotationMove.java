@@ -12,7 +12,6 @@ import nl.tue.geometrycore.util.DoubleUtil;
 
 public class RotationMove extends Move {
 
-    public final Configuration configuration;
     protected final OrientationSet orientations;
     protected final Vector rotationPoint;
 
@@ -22,7 +21,7 @@ public class RotationMove extends Move {
     protected double area = 0.0;
 
     public RotationMove(Configuration configuration, Vector rotationPoint, OrientationSet orientations) {
-        this.configuration = configuration;
+        super(configuration);
         this.rotationPoint = rotationPoint;
         this.orientations = orientations;
 
@@ -53,6 +52,28 @@ public class RotationMove extends Move {
     @Override
     public double getAffectedArea() {
         return area;
+    }
+
+
+    @Override
+    public double getCompensationArea() {
+        var prevTriangle = new Polygon(rotationPoint, configuration.previous.getEnd(), rotation.getStart());
+        var nextTriangle = new Polygon(rotationPoint, configuration.next.getStart(), rotation.getEnd());
+
+        var prevArea = prevTriangle.areaUnsigned();
+        var nextArea = nextTriangle.areaUnsigned();
+
+        var prevPoint = new LineSegment(rotation.getStart(), rotationPoint).getPointAlongPerimeter(0.5);
+        var nextPoint = new LineSegment(rotationPoint, rotation.getEnd()).getPointAlongPerimeter(0.5);
+
+        if (configuration.isInsidePolygon(prevPoint)) {
+            prevArea *= -1;
+        }
+        if (configuration.isInsidePolygon(nextPoint)) {
+            nextArea *= -1;
+        }
+
+        return prevArea + nextArea;
     }
 
     public LineSegment getRotation() {

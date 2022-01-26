@@ -19,7 +19,6 @@ import static blankishproject.Util.undirectedEquals;
 
 public abstract class NormalMove extends Move {
 
-    public final Configuration configuration;
     protected final LineSegment contraction;
     protected final Vector direction;
     protected double distance;
@@ -27,7 +26,7 @@ public abstract class NormalMove extends Move {
     protected List<LineSegment> blockingEdges;
 
     public NormalMove(Configuration configuration, Polygon polygon) {
-        this.configuration = configuration;
+        super(configuration);
         this.distance = calculateDistance();
         this.direction = calculateDirection();
         this.contraction = calculateContraction();
@@ -117,7 +116,7 @@ public abstract class NormalMove extends Move {
         if (DoubleUtil.close(removeArea, getArea()))
             return contraction;
         if (removeArea > getArea() || removeArea < 0)
-            throw new IllegalArgumentException("removeArea out of possible move bounds [0, " + getArea() + "]: " + removeArea);
+            throw new IllegalArgumentException("removeArea out of possible move bounds [0, " + getArea() + "]: " + removeArea + " at index " + configuration.index);
 
         var inner = configuration.inner;
         var innerLength = inner.length();
@@ -133,9 +132,10 @@ public abstract class NormalMove extends Move {
         var mid = getForDistance(removeDistance);
 
         assert DoubleUtil.close(midLength, mid.length()) : "Invalid midLength: " + midLength + " != " + mid.length()
-                + "\n       " + configuration.previous.getStart() + configuration.previous.getEnd() + configuration.next.getStart() + configuration.next.getEnd()
-                + "\n       " + configuration.previous.length() + " " + configuration.next.length()
+               // + "\n       " + configuration.previous.getStart() + configuration.previous.getEnd() + configuration.next.getStart() + configuration.next.getEnd()
+               // + "\n       " + configuration.previous.length() + " " + configuration.next.length()
                 + "\n       " + contraction
+                + "\n       index: " + configuration.index
                 + "\n       " + configuration.wasInvalidated()
                 + "\n       " + configuration.inner;
 

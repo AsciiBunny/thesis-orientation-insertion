@@ -20,7 +20,6 @@ import static blankishproject.Util.undirectedEquals;
 public class PairNormalMove extends Move {
 
     protected final SimplificationData data;
-    public final Configuration configuration;
     public final Configuration pairedConfiguration;
     public final NormalMove move;
     public final NormalMove pairedMove;
@@ -31,8 +30,8 @@ public class PairNormalMove extends Move {
     protected List<LineSegment> blockingEdges;
 
     public PairNormalMove(SimplificationData data, Configuration configuration, boolean invalid) {
+        super(configuration);
         this.data = data;
-        this.configuration = configuration;
 
         this.pairedConfiguration = null;
         this.move = null;
@@ -44,8 +43,8 @@ public class PairNormalMove extends Move {
     }
 
     public PairNormalMove(Configuration configuration, Configuration pairedConfiguration, NormalMove move, NormalMove pairedMove, SimplificationData data) {
+        super(configuration);
         this.data = data;
-        this.configuration = configuration;
         this.pairedConfiguration = pairedConfiguration;
         this.move = move;
         this.pairedMove = pairedMove;
@@ -71,6 +70,11 @@ public class PairNormalMove extends Move {
     @Override
     public double getAffectedArea() {
         return area * 2;
+    }
+
+    @Override
+    public double getCompensationArea() {
+        return 0;
     }
 
     @Override

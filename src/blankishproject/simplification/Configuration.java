@@ -164,7 +164,7 @@ public class Configuration {
     }
 
     /**
-     * Returns the inwards normal of the inner edge
+     * Returns the outwards normal of the inner edge
      * <br> Complexity O(1)
      */
     public Vector getOutwardsNormal() {
@@ -179,6 +179,10 @@ public class Configuration {
         var normal = getNormal();
         normal.scale(-1);
         return normal;
+    }
+
+    public boolean isInsidePolygon(Vector point) {
+        return (inner.getEnd().getX() - inner.getStart().getX()) * (point.getY() - inner.getStart().getY()) - (inner.getEnd().getY() - inner.getStart().getY()) * (point.getX() - inner.getStart().getX()) > 0;
     }
     //endregion Inner Normals
 
@@ -254,5 +258,14 @@ public class Configuration {
     public boolean isSpecialPairNeighbouring(Configuration other) {
         return (undirectedEquals(other.next, this.previous) && ((other.isEndReflex() && this.isStartConvex()) || (other.isEndConvex() && this.isStartReflex())))
                 || (undirectedEquals(this.next, other.previous) && ((this.isEndReflex() && other.isStartConvex()) || (this.isEndConvex() && other.isStartReflex())));
+    }
+
+    public boolean isColliding(Configuration other) {
+        return this == other
+                || undirectedEquals(this.previous, other.next)
+                || undirectedEquals(this.next, other.previous)
+                || undirectedEquals(this.inner, other.next)
+                || undirectedEquals(this.inner, other.previous)
+                || undirectedEquals(this.inner, other.inner);
     }
 }
