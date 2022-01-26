@@ -9,8 +9,11 @@ import nl.tue.geometrycore.geometryrendering.styling.Dashing;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class DataGeneration {
+
+    public static Random random = new Random();
 
     private static LineSegment[] alignment = new LineSegment[]{
             new LineSegment(new Vector(0, 0), new Vector(0, 400)),
@@ -40,15 +43,23 @@ public class DataGeneration {
         var step = direction.clone();
         step.normalize();
 
-
-        var ratios = Vector.solveVectorAddition(assigned, associated, step);
-        var assignedStep = Vector.multiply(stepSize * ratios[0], assigned);
-        var associatedStep = Vector.multiply(stepSize * ratios[1], associated);
-
-
         points.add(start.clone());
         var now = start.clone();
         for (int i = 0; i < data.stairSteps; i++) {
+            double assignedAngleAdjustment = (random.nextDouble() * 2 - 1) * (data.staircaseSlopeVariation / 360) * 2 * Math.PI;
+            double associatedAngleAdjustment = (random.nextDouble() * 2 - 1) * (data.staircaseSlopeVariation / 360) * 2 * Math.PI;
+
+            var adjustedAssigned = Vector.rotate(assigned, assignedAngleAdjustment);
+            var adjustedAssociated = Vector.rotate(associated, associatedAngleAdjustment);
+
+            var ratios = Vector.solveVectorAddition(adjustedAssigned, adjustedAssociated, step);
+
+            var stepSizeAdjustment = random.nextDouble() * (data.staircaseStepSizeVariation - 100) / 100 + 1;
+            var adjustedStepSize = stepSize * stepSizeAdjustment;
+
+            var assignedStep = Vector.multiply(adjustedStepSize * ratios[0], adjustedAssigned);
+            var associatedStep = Vector.multiply(adjustedStepSize * ratios[1], adjustedAssociated);
+
             buildStep(points, now, assignedStep, associatedStep);
             buildStep(points, now, associatedStep, assignedStep);
         }

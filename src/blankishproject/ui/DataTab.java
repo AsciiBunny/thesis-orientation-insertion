@@ -34,19 +34,37 @@ public class DataTab {
         tab.addSeparator(0);
 
         var countLabel = tab.addLabel("Step Count: 10");
-        tab.addIntegerSlider(data.stairSteps, 1,  1000, (changeEvent, integer) -> {
+        tab.addIntegerSlider(data.stairSteps, 1,  100, (changeEvent, integer) -> {
             data.stairSteps = integer;
             countLabel.setText("Step Count: " + integer);
             data.generateStaircase();
         });
 
         tab.addSpace(3);
-        var slopeLabel = tab.addLabel("Staircase Slope: 45");
+        var slopeLabel = tab.addLabel("Staircase Slope: 45 degrees");
         tab.addIntegerSlider((int) data.staircaseSlope, 1,  89, (changeEvent, integer) -> {
             data.staircaseSlope = integer;
             slopeLabel.setText("Staircase Slope: " + integer);
             data.generateStaircase();
         });
+
+        tab.addSpace(3);
+        var slopeVariationLabel = tab.addLabel("Slope Variation: 0 degrees");
+        tab.addIntegerSlider((int) data.staircaseSlopeVariation, 0,  89, (changeEvent, integer) -> {
+            data.staircaseSlopeVariation = integer;
+            slopeVariationLabel.setText("Slope Variation : " + integer + " degrees");
+            data.generateStaircase();
+        });
+
+
+        tab.addSpace(3);
+        var stepSizeVariationLabel = tab.addLabel("Step Size Variation: 0 times");
+        tab.addIntegerSlider((int) data.staircaseStepSizeVariation, 100,  1000, (changeEvent, integer) -> {
+            data.staircaseStepSizeVariation = integer;
+            stepSizeVariationLabel.setText("Step Size Variation : " + data.staircaseStepSizeVariation / 100.0 + " times");
+            data.generateStaircase();
+        });
+
     }
 
 
@@ -72,7 +90,7 @@ public class DataTab {
             data.draw.repaint();
         });
 
-        drawCheckbox = tab.addCheckbox("Draw Alignment Rectangle", data.drawScreenshotAlignment, (e, b) -> {
+        tab.addCheckbox("Draw Alignment Rectangle", data.drawScreenshotAlignment, (e, b) -> {
             data.drawScreenshotAlignment = b;
             data.draw.repaint();
         });

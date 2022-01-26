@@ -29,8 +29,10 @@ public class Data {
     public Polygon original;
 
     public Polygon staircase;
-    public int stairSteps = 10;
+    public int stairSteps = 20;
     public double staircaseSlope = 45;
+    public double staircaseSlopeVariation = 0;
+    public double staircaseStepSizeVariation = 100;
     public OrientationSet staircaseOrientations = new OrientationSet();
     public boolean drawStaircase = true;
 
@@ -63,7 +65,7 @@ public class Data {
     public boolean drawOrientations = false;
     public boolean drawClassifications = false;
     public boolean drawSignificance = false;
-    public boolean drawScreenshotAlignment = true;
+    public boolean drawScreenshotAlignment = false;
 
     // keep these last
     public DrawPanel draw;
