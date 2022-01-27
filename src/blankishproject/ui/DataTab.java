@@ -59,7 +59,7 @@ public class DataTab {
 
         tab.addSpace(3);
         var stepSizeVariationLabel = tab.addLabel("Step Size Variation: 0 times");
-        tab.addIntegerSlider((int) data.staircaseStepSizeVariation, 100,  1000, (changeEvent, integer) -> {
+        tab.addIntegerSlider((int) data.staircaseStepSizeVariation, 100,  5000, (changeEvent, integer) -> {
             data.staircaseStepSizeVariation = integer;
             stepSizeVariationLabel.setText("Step Size Variation : " + data.staircaseStepSizeVariation / 100.0 + " times");
             data.generateStaircase();

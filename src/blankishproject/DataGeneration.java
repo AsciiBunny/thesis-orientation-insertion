@@ -65,8 +65,8 @@ public class DataGeneration {
         }
         points.add(now);
 
-        points.add(new Vector(now.getX(),corner.getY() - 10 * sideLength));
-        points.add(new Vector(corner.getX() - 10 * sideLength,corner.getY() - 10 * sideLength));
+        points.add(new Vector(now.getX(),now.getY() - 10 * sideLength));
+        points.add(new Vector(corner.getX() - 10 * sideLength,now.getY() - 10 * sideLength));
         points.add(new Vector(corner.getX() - 10 * sideLength,corner.getY() + sideLength));
 
         data.staircase = new Polygon(points);
