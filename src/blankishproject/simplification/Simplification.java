@@ -256,8 +256,8 @@ public class Simplification {
         data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
         data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
 
-        var inner = data.innerDifference.stream().mapToDouble(Polygon::areaUnsigned).sum();
-        var outer = data.outerDifference.stream().mapToDouble(Polygon::areaUnsigned).sum();
+        var inner = data.innerDifference.stream().filter(p -> p.vertexCount() > 0).mapToDouble(Polygon::areaUnsigned).sum();
+        var outer = data.outerDifference.stream().filter(p -> p.vertexCount() > 0).mapToDouble(Polygon::areaUnsigned).sum();
         System.out.println("innerDifference = " + inner);
         System.out.println("outerDifference = " + outer);
     }

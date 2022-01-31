@@ -113,16 +113,29 @@ public class RotationMove extends Move {
             var resultLine = new Line(rotationPoint, direction);
 
             var prevIntersections = resultLine.intersect(configuration.previous);
-            if (!(prevIntersections.size() == 1 && prevIntersections.get(0) instanceof Vector)) {
+            Vector newPrev;
+            if (prevIntersections.size() != 1) {
                 continue;
-            }
-            var nextIntersections = resultLine.intersect(configuration.next);
-            if (!(nextIntersections.size() == 1 && nextIntersections.get(0) instanceof Vector)) {
+            } else if (prevIntersections.get(0) instanceof Vector) {
+                newPrev = (Vector) prevIntersections.get(0);
+            } else if (prevIntersections.get(0) instanceof LineSegment) {
+                newPrev = ((LineSegment) prevIntersections.get(0)).getEnd();
+            } else {
                 continue;
             }
 
-            var newPrev = (Vector) prevIntersections.get(0);
-            var newNext = (Vector) nextIntersections.get(0);
+            var nextIntersections = resultLine.intersect(configuration.next);
+            Vector newNext;
+            if (nextIntersections.size() != 1) { //&& nextIntersections.get(0) instanceof Vector)
+              continue;
+            } else if (nextIntersections.get(0) instanceof Vector) {
+                newNext = (Vector) nextIntersections.get(0);
+            } else if (nextIntersections.get(0) instanceof  LineSegment) {
+                newNext = ((LineSegment) nextIntersections.get(0)).getStart();
+            } else {
+                continue;
+            }
+
             var newRotation = new LineSegment(newPrev, newNext);
             var newArea = calculateArea(newRotation);
 
