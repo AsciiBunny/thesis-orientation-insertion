@@ -303,7 +303,7 @@ public class SimplificationData {
             }
         }
 
-        if (current.start >= 0 && current.end < 0) {
+        if (staircases.size() > 0 && current.start >= 0 && current.end < 0) {
             staircases.get(0).loops = true;
             staircases.get(0).start = current.start;
         }

@@ -1,6 +1,8 @@
 package blankishproject.ui;
 
 import blankishproject.Data;
+import blankishproject.OrientationSet;
+import blankishproject.Schematization;
 import nl.tue.geometrycore.gui.sidepanel.SideTab;
 
 import static blankishproject.ui.SidePanel.titleFont;
@@ -16,17 +18,30 @@ public class SchematizationTab {
 
     public SchematizationTab(Data data, SidePanel panel) {
         this.data = data;
-        this.tab = panel.addTab("Schematization");
+        this.tab = panel.addTab("Orientation-restriction");
 
         panel.addGeometryOptionsSection(tab);
         tab.addSpace(5);
-        panel.addOrientationsSection(tab, data.orientations, "0, 45, 90, 135");
+        addOrientationsSection(data.orientations, "0, 45, 90, 135");
         tab.addSpace(5);
         addGeometryInformationSection();
         tab.addSpace(5);
         addRunningSection();
         tab.addSpace(5);
         addDebugDrawOptionsSection();
+    }
+
+    void addOrientationsSection(OrientationSet orientations, String startText ) {
+        tab.addLabel("Geometry Options").setFont(titleFont);
+        tab.addSeparator(0);
+
+        var tf = tab.addTextField(startText);
+        tab.addButton("Set Orientations", (e) -> {
+            orientations.setFrom(tf.getText());
+            Schematization.init(data);
+            data.repaint();
+        });
+
     }
 
     private void addGeometryInformationSection() {
