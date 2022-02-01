@@ -10,28 +10,27 @@ import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.util.DoubleUtil;
 
-public class RotationMove extends Move {
+public abstract class RotationMove extends Move {
 
     protected final OrientationSet orientations;
-    protected final Vector rotationPoint;
 
     // Precalculated values
     protected Vector direction;
     protected LineSegment rotation;
+    protected Vector rotationPoint;
     protected double area = 0.0;
 
-    public RotationMove(Configuration configuration, Vector rotationPoint, OrientationSet orientations) {
+    public RotationMove(Configuration configuration, OrientationSet orientations) {
         super(configuration);
-        this.rotationPoint = rotationPoint;
         this.orientations = orientations;
 
         if (this.configuration.isInnerReflex() || this.configuration.isInnerConvex()) {
             return;
         }
 
-        this.rotation = calculateRotation();
+        calculateRotation();
         if (this.rotation != null) {
-            this.area = calculateArea(this.rotation);
+            this.area = calculateArea(this.rotation, this.rotationPoint);
         }
         if (this.area <= DoubleUtil.EPS){
             rotation = null;
@@ -97,9 +96,10 @@ public class RotationMove extends Move {
     //endregion applying move
 
     //region calculation
-    protected LineSegment calculateRotation() {
+    protected void calculateRotation() {
         var largestArea = -1.0;
         LineSegment largestRotation = null;
+        Vector largestRotationPoint = null;
 
         for (OrientationSet.Orientation orientation : orientations) {
             direction = orientation.getDirection();
@@ -110,6 +110,7 @@ public class RotationMove extends Move {
             if (innerDirection.isApproximately(direction) || innerDirection.isApproximately(Vector.multiply(-1, direction)))
                 continue;
 
+            var rotationPoint = getRotationPoint(orientation);
             var resultLine = new Line(rotationPoint, direction);
 
             var prevIntersections = resultLine.intersect(configuration.previous);
@@ -137,18 +138,22 @@ public class RotationMove extends Move {
             }
 
             var newRotation = new LineSegment(newPrev, newNext);
-            var newArea = calculateArea(newRotation);
+            var newArea = calculateArea(newRotation, rotationPoint);
 
             if  (newArea > largestArea) {
                 largestArea = newArea;
                 largestRotation = newRotation;
+                largestRotationPoint = rotationPoint;
             }
         }
 
-        return largestRotation;
+        this.rotationPoint = largestRotationPoint;
+        this.rotation =  largestRotation;
     }
 
-    private double calculateArea(LineSegment rotation) {
+    protected abstract Vector getRotationPoint(OrientationSet.Orientation orientation);
+
+    private double calculateArea(LineSegment rotation, Vector rotationPoint) {
         var prevTriangle = new Polygon(rotationPoint, configuration.previous.getEnd(), rotation.getStart());
         var nextTriangle = new Polygon(rotationPoint, configuration.next.getStart(), rotation.getEnd());
         return prevTriangle.areaUnsigned() + nextTriangle.areaUnsigned();

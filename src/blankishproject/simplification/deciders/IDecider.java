@@ -17,7 +17,8 @@ public abstract class IDecider {
             Map.entry("4. Minimal Complementary Pair", new MinimalComplementaryPairDecider()),
             Map.entry("5. Only Start/End Rotation", new OnlyStartEndRotationDecider()),
             Map.entry("6. Only Middle Rotation", new OnlyMiddleRotationDecider()),
-            Map.entry("7. Minimal", new MinimalDecider())
+            Map.entry("7. Only Compensating Rotation", new OnlyCompensatingRotationDecider()),
+            Map.entry("8. Minimal", new MinimalDecider())
     );
 
     public abstract List<Decision> findMoves(SimplificationData data);

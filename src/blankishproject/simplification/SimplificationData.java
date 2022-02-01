@@ -5,10 +5,7 @@ import blankishproject.Util;
 import blankishproject.simplification.moves.moving.NegativeNormalMove;
 import blankishproject.simplification.moves.moving.PairNormalMove;
 import blankishproject.simplification.moves.moving.PositiveNormalMove;
-import blankishproject.simplification.moves.rotation.EndRotationMove;
-import blankishproject.simplification.moves.rotation.MiddleRotationMove;
-import blankishproject.simplification.moves.rotation.RotationMove;
-import blankishproject.simplification.moves.rotation.StartRotationMove;
+import blankishproject.simplification.moves.rotation.*;
 import blankishproject.ui.ProgressDialog;
 import nl.tue.geometrycore.geometry.linear.LineSegment;
 import nl.tue.geometrycore.geometry.linear.Polygon;
@@ -33,6 +30,7 @@ public class SimplificationData {
     public ArrayList<RotationMove> startRotationMoves;
     public ArrayList<RotationMove> endRotationMoves;
     public ArrayList<RotationMove> middleRotationMoves;
+    public ArrayList<RotationMove> compensatingRotationMoves;
 
     public List<Staircase> staircases;
 
@@ -89,6 +87,7 @@ public class SimplificationData {
         startRotationMoves = new ArrayList<>();
         endRotationMoves = new ArrayList<>();
         middleRotationMoves = new ArrayList<>();
+        compensatingRotationMoves = new ArrayList<>();
     }
 
     public void init(Polygon polygon, ProgressDialog dialog) {
@@ -96,7 +95,7 @@ public class SimplificationData {
 
         this.dialog = dialog;
         if (dialog != null) {
-            var count = 5 + Util.countTrue(calculateStartRotationMoves, calculateEndRotationMoves, calculateMiddleRotationMoves);
+            var count = 6 + Util.countTrue(calculateStartRotationMoves, calculateEndRotationMoves, calculateMiddleRotationMoves);
             dialog.setMaxProgress(polygon.vertexCount() * count);
         }
 
@@ -115,6 +114,8 @@ public class SimplificationData {
         if (calculateMiddleRotationMoves)
             middleRotationMoves = initMiddleRotationMoves();
 
+        compensatingRotationMoves = initCompensatingRotationMoves();
+
         this.dialog = null;
     }
 
@@ -131,6 +132,8 @@ public class SimplificationData {
             endRotationMoves.remove(index);
         if (calculateMiddleRotationMoves)
             middleRotationMoves.remove(index);
+
+        compensatingRotationMoves.remove(index);
 
         var edge = polygon.edge(index).clone();
         polygon.removeVertex(index);
@@ -155,6 +158,7 @@ public class SimplificationData {
         if (calculateMiddleRotationMoves)
             middleRotationMoves.set(index, new MiddleRotationMove(configuration, orientations));
 
+        compensatingRotationMoves.set(index, new CompensatingRotationMove(configuration, orientations));
     }
 
     private ArrayList<Configuration> initConfigurations() {
@@ -264,6 +268,16 @@ public class SimplificationData {
         var list = new ArrayList<RotationMove>(polygon.vertexCount());
         for (int index = 0; index < polygon.vertexCount(); index++) {
             list.add(new MiddleRotationMove(configurations.get(index), orientations));
+            if (dialog != null)
+                dialog.increaseProgress(1);
+        }
+        return list;
+    }
+
+    private ArrayList<RotationMove> initCompensatingRotationMoves() {
+        var list = new ArrayList<RotationMove>(polygon.vertexCount());
+        for (int index = 0; index < polygon.vertexCount(); index++) {
+            list.add(new CompensatingRotationMove(configurations.get(index), orientations));
             if (dialog != null)
                 dialog.increaseProgress(1);
         }

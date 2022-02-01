@@ -58,19 +58,11 @@ public class MinimalDecider extends IDecider {
     }
 
     private List<Decision> findRotation(SimplificationData data) {
-        var min = findSmallest(data.middleRotationMoves);
+        var min = findSmallest(data.compensatingRotationMoves);
 
         if (min == null)
             return Collections.emptyList();
 
-        if (!data.compensateSingleMoves)
-            return Collections.singletonList(new Decision(min.configuration, min));
-
-        var compensation = findCompensator(data, min, min.configuration.index);
-
-        if (compensation == null)
-            return Collections.emptyList();
-
-        return List.of(new Decision(min.configuration, min), compensation);
+        return List.of(new Decision(min.configuration, min));
     }
 }

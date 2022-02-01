@@ -247,22 +247,28 @@ public class Data {
     public void initState() {
         runChecks();
 
-        new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() {
-                dialog.setProgress(0);
-                dialog.show();
-                Simplification.initState(simplificationData, original, dialog);
-                Schematization.init(Data.this);
-                return null;
-            }
+        if (simplificationData.runThreaded) {
+            new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() {
+                    dialog.setProgress(0);
+                    dialog.show();
+                    Simplification.initState(simplificationData, original, dialog);
+                    Schematization.init(Data.this);
+                    return null;
+                }
 
-            @Override
-            protected void done() {
-                dialog.stop();
-                repaint();
-            }
-        }.execute();
+                @Override
+                protected void done() {
+                    dialog.stop();
+                    repaint();
+                }
+            }.execute();
+        } else {
+            Simplification.initState(simplificationData, original, dialog);
+            Schematization.init(Data.this);
+            repaint();
+        }
     }
 
     public void recalculateState() {
