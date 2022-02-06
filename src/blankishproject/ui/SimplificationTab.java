@@ -131,11 +131,19 @@ public class SimplificationTab {
             sData.calculateMiddleRotationMoves = b;
             data.draw.repaint();
         });
+
         var label = tab.addLabel("Minimal staircase size: " + data.simplificationData.minStaircaseSize );
         tab.addIntegerSlider(data.simplificationData.minStaircaseSize, 1, 50, (changeEvent, integer) -> {
             data.simplificationData.minStaircaseSize = integer;
             data.simplificationData.recalculateStaircases();
             label.setText("Minimal staircase size: " + data.simplificationData.minStaircaseSize );
+            data.draw.repaint();
+        });
+
+        var label2 = tab.addLabel("Distance between rotations: " + data.simplificationData.rotationDistance );
+        tab.addIntegerSlider(data.simplificationData.rotationDistance, 0, 25, (changeEvent, integer) -> {
+            data.simplificationData.rotationDistance = integer;
+            label2.setText("Distance between rotations: " + data.simplificationData.rotationDistance);
             data.draw.repaint();
         });
 

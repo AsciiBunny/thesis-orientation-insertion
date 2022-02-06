@@ -43,15 +43,16 @@ public class Data {
     public int[] significance;
     public int currentIndex;
 
+    public OrientationSet orientations = new OrientationSet();
+
     // Simplification
-    public SimplificationData simplificationData = new SimplificationData(new Polygon());
+    public SimplificationData simplificationData = new SimplificationData(new Polygon(), orientations);
 
     // settings
     public SizeMode sizemode = SizeMode.VIEW;
     public double strokewidth = 3;
     public BaseGeometry selected = null;
 
-    public OrientationSet orientations = new OrientationSet();
 
     // Debug geometry
     public Map<Color, GeometryList<LineSegment>> debugLines = new HashMap<>();

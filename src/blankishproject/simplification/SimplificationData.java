@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class SimplificationData {
 
     public Polygon polygon;
-    public OrientationSet orientations = new OrientationSet();
+    public OrientationSet orientations;
 
     public ArrayList<Configuration> configurations;
 
@@ -47,6 +47,7 @@ public class SimplificationData {
     public boolean compensateSingleMoves = true;
 
     public int minStaircaseSize = 5;
+    public int rotationDistance = 0;
     //endregion Calculate Settings
 
     // region Debug Drawing Settings
@@ -69,11 +70,8 @@ public class SimplificationData {
     public boolean drawOuterDifference = false;
     // endregions Debug Drawing Settings
 
-    public SimplificationData(Polygon polygon) {
-        orientations.addOrientationDegrees(0);
-        orientations.addOrientationDegrees(45);
-        orientations.addOrientationDegrees(90);
-        orientations.addOrientationDegrees(135);
+    public SimplificationData(Polygon polygon, OrientationSet orientations) {
+        this.orientations = orientations;
 
         init(polygon, null);
     }
@@ -152,13 +150,13 @@ public class SimplificationData {
         negativePairMoves.set(index, new PairNormalMove(this, configuration, true));
 
         if (calculateStartRotationMoves)
-            startRotationMoves.set(index, new StartRotationMove(configuration, orientations));
+            startRotationMoves.set(index, new StartRotationMove(this, configuration, orientations));
         if (calculateEndRotationMoves)
-            endRotationMoves.set(index, new EndRotationMove(configuration, orientations));
+            endRotationMoves.set(index, new EndRotationMove(this, configuration, orientations));
         if (calculateMiddleRotationMoves)
-            middleRotationMoves.set(index, new MiddleRotationMove(configuration, orientations));
+            middleRotationMoves.set(index, new MiddleRotationMove(this, configuration, orientations));
 
-        compensatingRotationMoves.set(index, new CompensatingRotationMove(configuration, orientations));
+        compensatingRotationMoves.set(index, new CompensatingRotationMove(this, configuration, orientations));
     }
 
     private ArrayList<Configuration> initConfigurations() {
@@ -247,7 +245,7 @@ public class SimplificationData {
     private ArrayList<RotationMove> initStartRotationMoves() {
         var list = new ArrayList<RotationMove>(polygon.vertexCount());
         for (int index = 0; index < polygon.vertexCount(); index++) {
-            list.add(new StartRotationMove(configurations.get(index), orientations));
+            list.add(new StartRotationMove(this, configurations.get(index), orientations));
             if (dialog != null)
                 dialog.increaseProgress(1);
         }
@@ -257,7 +255,7 @@ public class SimplificationData {
     private ArrayList<RotationMove> initEndRotationMoves() {
         var list = new ArrayList<RotationMove>(polygon.vertexCount());
         for (int index = 0; index < polygon.vertexCount(); index++) {
-            list.add(new EndRotationMove(configurations.get(index), orientations));
+            list.add(new EndRotationMove(this, configurations.get(index), orientations));
             if (dialog != null)
                 dialog.increaseProgress(1);
         }
@@ -267,7 +265,7 @@ public class SimplificationData {
     private ArrayList<RotationMove> initMiddleRotationMoves() {
         var list = new ArrayList<RotationMove>(polygon.vertexCount());
         for (int index = 0; index < polygon.vertexCount(); index++) {
-            list.add(new MiddleRotationMove(configurations.get(index), orientations));
+            list.add(new MiddleRotationMove(this, configurations.get(index), orientations));
             if (dialog != null)
                 dialog.increaseProgress(1);
         }
@@ -277,7 +275,7 @@ public class SimplificationData {
     private ArrayList<RotationMove> initCompensatingRotationMoves() {
         var list = new ArrayList<RotationMove>(polygon.vertexCount());
         for (int index = 0; index < polygon.vertexCount(); index++) {
-            list.add(new CompensatingRotationMove(configurations.get(index), orientations));
+            list.add(new CompensatingRotationMove(this, configurations.get(index), orientations));
             if (dialog != null)
                 dialog.increaseProgress(1);
         }

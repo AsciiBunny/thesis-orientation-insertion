@@ -2,6 +2,7 @@ package blankishproject.simplification.moves.rotation;
 
 import blankishproject.OrientationSet;
 import blankishproject.simplification.Configuration;
+import blankishproject.simplification.SimplificationData;
 import blankishproject.simplification.moves.Move;
 import blankishproject.simplification.moves.MoveType;
 import nl.tue.geometrycore.geometry.Vector;
@@ -12,6 +13,7 @@ import nl.tue.geometrycore.util.DoubleUtil;
 
 public abstract class RotationMove extends Move {
 
+    protected final SimplificationData data;
     protected final OrientationSet orientations;
 
     // Precalculated values
@@ -20,8 +22,9 @@ public abstract class RotationMove extends Move {
     protected Vector rotationPoint;
     protected double area = 0.0;
 
-    public RotationMove(Configuration configuration, OrientationSet orientations) {
+    public RotationMove(SimplificationData data, Configuration configuration, OrientationSet orientations) {
         super(configuration);
+        this.data = data;
         this.orientations = orientations;
 
         if (this.configuration.isInnerReflex() || this.configuration.isInnerConvex()) {
@@ -32,7 +35,7 @@ public abstract class RotationMove extends Move {
         if (this.rotation != null) {
             this.area = calculateArea(this.rotation, this.rotationPoint);
         }
-        if (this.area <= DoubleUtil.EPS){
+        if (this.area <= DoubleUtil.EPS) {
             rotation = null;
         }
     }
@@ -45,7 +48,7 @@ public abstract class RotationMove extends Move {
 
     @Override
     public boolean isValid() {
-        return rotation != null;
+        return rotation != null && !isLimited();
     }
 
     @Override
@@ -53,6 +56,9 @@ public abstract class RotationMove extends Move {
         return area;
     }
 
+    private boolean isLimited() {
+        return configuration.index % (data.rotationDistance + 1) > 0;
+    }
 
     @Override
     public double getCompensationArea() {
@@ -128,10 +134,10 @@ public abstract class RotationMove extends Move {
             var nextIntersections = resultLine.intersect(configuration.next);
             Vector newNext;
             if (nextIntersections.size() != 1) { //&& nextIntersections.get(0) instanceof Vector)
-              continue;
+                continue;
             } else if (nextIntersections.get(0) instanceof Vector) {
                 newNext = (Vector) nextIntersections.get(0);
-            } else if (nextIntersections.get(0) instanceof  LineSegment) {
+            } else if (nextIntersections.get(0) instanceof LineSegment) {
                 newNext = ((LineSegment) nextIntersections.get(0)).getStart();
             } else {
                 continue;
@@ -140,7 +146,7 @@ public abstract class RotationMove extends Move {
             var newRotation = new LineSegment(newPrev, newNext);
             var newArea = calculateArea(newRotation, rotationPoint);
 
-            if  (newArea > largestArea) {
+            if (newArea > largestArea) {
                 largestArea = newArea;
                 largestRotation = newRotation;
                 largestRotationPoint = rotationPoint;
@@ -148,7 +154,7 @@ public abstract class RotationMove extends Move {
         }
 
         this.rotationPoint = largestRotationPoint;
-        this.rotation =  largestRotation;
+        this.rotation = largestRotation;
     }
 
     protected abstract Vector getRotationPoint(OrientationSet.Orientation orientation);

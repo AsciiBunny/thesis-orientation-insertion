@@ -2,13 +2,14 @@ package blankishproject.simplification.moves.rotation;
 
 import blankishproject.OrientationSet;
 import blankishproject.simplification.Configuration;
+import blankishproject.simplification.SimplificationData;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.util.DoubleUtil;
 
 public class CompensatingRotationMove extends RotationMove {
 
-    public CompensatingRotationMove(Configuration configuration, OrientationSet orientations) {
-        super(configuration, orientations);
+    public CompensatingRotationMove(SimplificationData data, Configuration configuration, OrientationSet orientations) {
+        super(data, configuration, orientations);
     }
 
     @Override
