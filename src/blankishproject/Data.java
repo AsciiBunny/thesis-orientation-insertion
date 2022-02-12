@@ -130,6 +130,23 @@ public class Data {
         }
     }
 
+    public void pasteOriginal() {
+        try (IPEReader read = IPEReader.clipboardReader()) {
+            List<ReadItem> items = read.read();
+            for (ReadItem i : items) {
+                if (i.toGeometry() instanceof Polygon) {
+                    original = (Polygon) i.toGeometry();
+                    draw.zoomToFit();
+                    break;
+                }
+            }
+
+            repaint();
+        } catch (IOException ex) {
+            Logger.getLogger(Data.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void copyIPE() {
         copyMode = true;
         try (IPEWriter write = IPEWriter.clipboardWriter()) {

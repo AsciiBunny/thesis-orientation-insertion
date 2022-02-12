@@ -55,8 +55,8 @@ public class DrawPanel extends GeometryPanel {
         if (data.simplificationData.polygon != null && data.original != null && (data.simplificationData.polygon.vertexCount() < data.original.vertexCount() || Simplification.totalMovesMade > 0))
             draw(data.simplificationData.polygon);
 
-        if (data.copyMode)
-            return;
+//        if (data.copyMode)
+//            return;
 
         setStroke(Color.red, 1.5 * data.strokewidth, Dashing.SOLID);
         draw(data.selected);

@@ -252,7 +252,7 @@ public class Simplification {
         data.negativePairMoves.forEach(move -> move.updateBlockingVectors(removed, changed));
     }
 
-    private static void calculateSymmetricDifference(Data data, Polygon polygon) {
+    public static void calculateSymmetricDifference(Data data, Polygon polygon) {
         data.innerDifference = Util.calculateSymmetricDifference(polygon, data.original);
         data.outerDifference = Util.calculateSymmetricDifference(data.original, polygon);
 

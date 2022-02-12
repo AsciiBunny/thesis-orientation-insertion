@@ -93,6 +93,12 @@ public class SimplificationTab {
             this.repaint();
         }));
 
+        tab.addButton("Calculate Symmetric Difference", (e -> {
+            Simplification.calculateSymmetricDifference(data, data.simplificationData.polygon);
+            data.draw.repaint();
+            this.repaint();
+        }));
+
         tab.addCheckbox("Run Threaded", data.simplificationData.runThreaded, (e, b) -> {
             data.simplificationData.runThreaded = b;
             data.draw.repaint();

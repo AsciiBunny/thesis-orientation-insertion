@@ -70,6 +70,9 @@ public class Compass {
             int count = counts[i];
             var length = count * 1.0 / maxCount;
 
+            if (count == 0)
+                continue;
+
             var dir = Vector.up();
             dir.scale(length * lengthRatio);
             dir.rotate(-segmentSize / 2);

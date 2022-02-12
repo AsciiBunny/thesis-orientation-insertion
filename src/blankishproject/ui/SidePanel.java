@@ -55,6 +55,7 @@ public class SidePanel extends TabbedSidePanel {
         tab.addSeparator(0);
 
         tab.addButton("Paste IPE [v]", (e) -> data.pasteIPE());
+        tab.addButton("Paste IPE Original", (e) -> data.pasteOriginal());
         tab.addButton("Copy IPE [c]", (e) -> data.copyIPE());
         tab.addButton("Reset Geometry [x]", (e) -> data.resetGeometry());
 
