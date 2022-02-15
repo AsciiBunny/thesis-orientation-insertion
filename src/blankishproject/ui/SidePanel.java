@@ -59,6 +59,10 @@ public class SidePanel extends TabbedSidePanel {
         tab.addButton("Copy IPE [c]", (e) -> data.copyIPE());
         tab.addButton("Reset Geometry [x]", (e) -> data.resetGeometry());
 
+        tab.addButton("Export PNG", (e -> {
+            data.exportPNG();
+        }));
+
         tab.addComboBox(SizeMode.values(), data.sizemode, (e, v) -> {
             data.sizemode = v;
             data.draw.repaint();

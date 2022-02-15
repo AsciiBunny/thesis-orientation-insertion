@@ -14,9 +14,11 @@ import nl.tue.geometrycore.geometryrendering.styling.SizeMode;
 import nl.tue.geometrycore.io.ReadItem;
 import nl.tue.geometrycore.io.ipe.IPEReader;
 import nl.tue.geometrycore.io.ipe.IPEWriter;
+import nl.tue.geometrycore.io.raster.RasterWriter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -155,6 +157,21 @@ public class Data {
         } catch (IOException ex) {
             Logger.getLogger(Data.class.getName()).log(Level.SEVERE, null, ex);
         }
+        copyMode = false;
+    }
+
+    int imageCount = 0;
+    public void exportPNG() {
+        copyMode = true;
+        File file = new File("./img_out/img_" + imageCount + ".png");
+        try (RasterWriter write = RasterWriter.imageWriter(draw.getWorldview(), 2000, 2000, file)) {
+            write.initialize();
+            draw.render(write);
+        } catch (IOException ex) {
+            Logger.getLogger(Data.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        imageCount++;
+        System.out.println("Print image " + imageCount);
         copyMode = false;
     }
 
