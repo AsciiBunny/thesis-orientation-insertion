@@ -1,16 +1,3 @@
-/**
- * This project is to serve as a simple base upon which to create GeometryCore
- * projects. It creates a simple GUI which can receive copies from IPE and
- * renders them black with a give stroke thickness. This can then be rendered
- * back to IPE as well.
- * <p>
- * Note that this demo isn't meant to display coding best-practices.
- * <p>
- * Main.java: how to easily create a default GUI with a drawpanel and a sidepanel
- * Data.java: central handler of data/settings/etc
- * DrawPanel.java: the rendering canvas
- * SidePanel.java: the sidepanel
- */
 package thesis.ui;
 
 import thesis.*;
@@ -25,9 +12,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
 
-/**
- * @author Wouter Meulemans (w.meulemans@tue.nl)
- */
 public class DrawPanel extends GeometryPanel {
 
     private final Data data;
